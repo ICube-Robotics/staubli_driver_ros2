@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find staubli_robot_description)/urdf/include/staubli_helpers.xacro" />
+    <xacro:include filename="$(find staubli_robot_description)/r2c/include/staubli_r2c_joints.xacro" />
+    <xacro:include filename="$(find staubli_robot_description)/r2c/include/staubli_r2c_gpios.xacro" />
+
+    <xacro:macro name="ur_ros2_control" params="
+        name
+        robot_prefix:=^
+        robot_model_parameters_file:=^
+        initial_positions_file:=^
+        use_mock_hardware:=^
+        mock_sensor_commands:=^
+    ">
+
+    <xacro:load_robot_model_config robot_model_config_file="${robot_model_parameters_file}"/>
+    <xacro:load_initial_positions_config initial_positions_config_file="${initial_positions_file}"/>
+
+    <ros2_control name="${name}" type="system">
+        <hardware>
+            <xacro:if value="${use_mock_hardware}">
+                <plugin>mock_components/GenericSystem</plugin>
+                <param name="calculate_dynamics">true</param>
+                <param name="state_following_offset">0.0</param>
+                <param name="mock_sensor_commands">${mock_sensor_commands}</param>
+            </xacro:if>
+            <xacro:unless value="${use_mock_hardware}">
+
+                <!-- TODO: Implement real hardware interface -->
+
+            </xacro:unless>
+        </hardware>
+
+        <!-- Actuated joints -->
+
+        <xacro:r2c_joints_control_description
+            robot_prefix="${robot_prefix}"
+            joint_names="${joint_names}"
+            initial_positions="${initial_positions}"
+            has_joint_torque_sensor="${has_joint_torque_sensor}"
+            has_joint_torque_control="false"
+        />
+
+        <!-- GPIOs -->
+
+        <xacro:r2c_gpios_control_description
+            robot_prefix="${robot_prefix}"
+            num_digital_inputs="${num_digital_inputs}"
+            num_digital_outputs="${num_digital_outputs}"
+            num_analog_inputs="${num_analog_inputs}"
+            num_analog_outputs="${num_analog_outputs}"
+        />
+
+        <!-- GPIOs for Control / Supervision -->
+        <!-- TODO -->
+    </ros2_control>
+    </xacro:macro>
+</robot>

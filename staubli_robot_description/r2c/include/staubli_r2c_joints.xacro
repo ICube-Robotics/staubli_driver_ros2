@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="r2c_joints_control_description" params="
+        robot_prefix:=^
+        joint_names
+        initial_positions
+        has_joint_torque_sensor
+        has_joint_torque_control
+    ">
+
+    <xacro:macro name="add_all_rc2_joints" params="robot_prefix:=^ joint_list:=^" >
+        <xacro:if value="${joint_list}">
+            <xacro:property name="joint_name" value="${joint_list.pop(0)}"/>
+            <joint name="${robot_prefix}${joint_name}">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+
+                <xacro:if value="${has_joint_torque_control}">
+                    <command_interface name="effort"/>
+                </xacro:if>
+
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions[joint_name]}</param>
+                </state_interface>
+
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+
+                <xacro:if value="${has_joint_torque_sensor}">
+                    <state_interface name="effort">
+                        <param name="initial_value">0.0</param>
+                    </state_interface>
+                </xacro:if>
+            </joint>
+            <!-- recursively call self to loop over the rest of the list -->
+            <xacro:add_all_rc2_joints robot_prefix="${robot_prefix}" joint_list="${joint_list}"/>
+        </xacro:if>
+    </xacro:macro>
+
+    <xacro:add_all_rc2_joints
+        robot_prefix="${robot_prefix}"
+        joint_list="${list(joint_names)}"/>
+
+    </xacro:macro>
+</robot>

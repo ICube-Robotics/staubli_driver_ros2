@@ -1,0 +1,8 @@
+# Initial joint positions for Staubli TX2-60L
+initial_positions:
+  joint_1: 0.1
+  joint_2: 0.2
+  joint_3: 0.3
+  joint_4: 0.4
+  joint_5: 0.5
+  joint_6: 0.6

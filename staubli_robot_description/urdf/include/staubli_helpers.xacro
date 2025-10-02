@@ -1,0 +1,337 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+    <xacro:include filename="$(find staubli_robot_description)/urdf/include/staubli_materials.xacro"/>
+
+    <!-- ***********************************
+    *    Loaders for the configuration     *
+    ************************************ -->
+    <xacro:macro name="load_robot_model_config" params="robot_model_config_file:=^" >
+        <xacro:property name="model_robot_config_dict" value="${xacro.load_yaml(robot_model_config_file)}"/>
+
+        <!-- Export robot model properties -->
+        <xacro:property name="model_robot_config" value="${model_robot_config_dict['robot_model']}" scope="parent"/>
+        <xacro:check_robot_model_config robot_model_config="${model_robot_config}"/>
+
+        <!-- Export common robot properties individually -->
+        <xacro:property name="has_ft_sensor" value="${model_robot_config['has_ft_sensor']}" scope="parent"/>
+        <xacro:property name="has_joint_torque_sensor" value="${model_robot_config['has_joint_torque_sensor']}" scope="parent"/>
+
+        <xacro:property name="joint_names" value="${model_robot_config['joints']}" scope="parent"/>
+        <xacro:property name="link_names" value="${model_robot_config['links']}" scope="parent"/>
+
+        <xacro:property name="num_digital_inputs" value="${model_robot_config['io']['num_digital_inputs']}" scope="parent"/>
+        <xacro:property name="num_digital_outputs" value="${model_robot_config['io']['num_digital_outputs']}" scope="parent"/>
+        <xacro:property name="num_analog_inputs" value="${model_robot_config['io']['num_analog_inputs']}" scope="parent"/>
+        <xacro:property name="num_analog_outputs" value="${model_robot_config['io']['num_analog_outputs']}" scope="parent"/>
+
+        <!-- End effector properties -->
+        <xacro:property
+            name="end_effector_frame_name"
+            value="${model_robot_config['end_effector']['frame_name']}"
+            scope="parent"
+        />
+        <xacro:property
+            name="end_effector_parent_link_name"
+            value="${model_robot_config['end_effector']['parent_link']}"
+            scope="parent"
+        />
+        <xacro:property
+            name="end_effector_frame_x"
+            value="${model_robot_config['end_effector']['xyz'][0]}"
+        />
+        <xacro:property
+            name="end_effector_frame_y"
+            value="${model_robot_config['end_effector']['xyz'][1]}"
+        />
+        <xacro:property
+            name="end_effector_frame_z"
+            value="${model_robot_config['end_effector']['xyz'][2]}"
+        />
+        <xacro:property
+            name="end_effector_frame_roll"
+            value="${model_robot_config['end_effector']['rpy'][0]}"
+        />
+        <xacro:property name="end_effector_frame_pitch"
+            value="${model_robot_config['end_effector']['rpy'][1]}"
+        />
+        <xacro:property name="end_effector_frame_yaw"
+            value="${model_robot_config['end_effector']['rpy'][2]}"
+        />
+        <xacro:property
+            name="end_effector_frame_xyz"
+            value="${end_effector_frame_x} ${end_effector_frame_y} ${end_effector_frame_z}"
+            scope="parent"
+        />
+        <xacro:property
+            name="end_effector_frame_rpy"
+            value="${end_effector_frame_roll} ${end_effector_frame_pitch} ${end_effector_frame_yaw}"
+            scope="parent"
+        />
+
+        <!-- F/T sensor properties -->
+        <xacro:if value="${has_ft_sensor}">
+            <xacro:property
+                name="ft_sensor_parent_link_name"
+                value="${model_robot_config['ft_sensor']['parent_link']}"
+                scope="parent"
+            />
+            <xacro:property
+                name="ft_sensor_frame_x"
+                value="${model_robot_config['ft_sensor']['xyz'][0]}"
+            />
+            <xacro:property
+                name="ft_sensor_frame_y"
+                value="${model_robot_config['ft_sensor']['xyz'][1]}"
+            />
+            <xacro:property
+                name="ft_sensor_frame_z"
+                value="${model_robot_config['ft_sensor']['xyz'][2]}"
+            />
+            <xacro:property
+                name="ft_sensor_frame_roll"
+                value="${model_robot_config['ft_sensor']['rpy'][0]}"
+            />
+            <xacro:property name="ft_sensor_frame_pitch"
+                value="${model_robot_config['ft_sensor']['rpy'][1]}"
+            />
+            <xacro:property name="ft_sensor_frame_yaw"
+                value="${model_robot_config['ft_sensor']['rpy'][2]}"
+            />
+            <xacro:property
+                name="ft_sensor_frame_xyz"
+                value="${ft_sensor_frame_x} ${ft_sensor_frame_y} ${ft_sensor_frame_z}"
+                scope="parent"
+            />
+            <xacro:property
+                name="ft_sensor_frame_rpy"
+                value="${ft_sensor_frame_roll} ${ft_sensor_frame_pitch} ${ft_sensor_frame_yaw}"
+                scope="parent"
+            />
+        </xacro:if>
+
+        <!-- IO properties -->
+         <xacro:property
+            name="number_of_digital_inputs"
+            value="${model_robot_config['io']['num_digital_inputs']}"
+            scope="parent"
+        />
+         <xacro:property
+            name="number_of_digital_outputs"
+            value="${model_robot_config['io']['num_digital_outputs']}"
+            scope="parent"
+        />
+         <xacro:property
+            name="number_of_analog_inputs"
+            value="${model_robot_config['io']['num_analog_inputs']}"
+            scope="parent"
+        />
+         <xacro:property
+            name="number_of_analog_outputs"
+            value="${model_robot_config['io']['num_analog_outputs']}"
+            scope="parent"
+        />
+
+    </xacro:macro>
+
+    <xacro:macro name="load_kinematics_config" params="kinematics_config_file:=^" >
+        <xacro:property name="kinematics_config_dict" value="${xacro.load_yaml(kinematics_config_file)}"/>
+        <!-- Export kinematics properties -->
+        <xacro:property name="kinematics_config" value="${kinematics_config_dict['kinematics']}" scope="parent"/>
+    </xacro:macro>
+
+    <xacro:macro name="load_dynamics_config" params="dynamics_config_file:=^" >
+        <xacro:property name="dynamics_config_dict" value="${xacro.load_yaml(dynamics_config_file)}"/>
+        <!-- Export dynamics properties -->
+        <xacro:property name="dynamics_config" value="${dynamics_config_dict['dynamics']}" scope="parent"/>
+    </xacro:macro>
+
+    <xacro:macro name="load_joint_limits_config" params="joint_limits_config_file:=^" >
+        <xacro:property name="joint_limits_config_dict" value="${xacro.load_yaml(joint_limits_config_file)}"/>
+        <!-- Export joint limits -->
+        <xacro:property name="joint_limits_config" value="${joint_limits_config_dict['joint_limits']}" scope="parent"/>
+    </xacro:macro>
+
+    <xacro:macro name="load_initial_positions_config" params="initial_positions_config_file:=^" >
+        <xacro:property name="initial_positions_config_dict" value="${xacro.load_yaml(initial_positions_config_file)}"/>
+        <!-- Export initial positions -->
+        <xacro:property name="initial_positions" value="${initial_positions_config_dict['initial_positions']}" scope="parent"/>
+    </xacro:macro>
+
+    <xacro:macro name="load_meshes_config" params="meshes_config_file:=^" >
+        <xacro:property name="meshes_config_dict" value="${xacro.load_yaml(meshes_config_file)}"/>
+        <!-- Export meshes config -->
+        <xacro:property name="meshes_config" value="${meshes_config_dict['meshes']}" scope="parent"/>
+    </xacro:macro>
+
+    <xacro:macro name="get_mesh" params="link_name type" >
+        <xacro:property name="mesh_params" value="${meshes_config[link_name][type]}"/>
+        <xacro:if value="${force_abs_paths}">
+            <xacro:property name="mesh" value="file://$(find ${mesh_params['package']})/${mesh_params['path']}"/>
+        </xacro:if>
+        <xacro:unless value="${force_abs_paths}">
+            <xacro:property name="mesh" value="package://${mesh_params['package']}/${mesh_params['path']}"/>
+        </xacro:unless>
+        <mesh filename="${mesh}"/>
+    </xacro:macro>
+
+    <xacro:macro name="get_material" params="link_name type">
+        <!-- TODO(anyone): get material properties from config -->
+        <material name="">
+            <color rgba="${color_staubli_yellow}"/>
+        </material>
+    </xacro:macro>
+
+    <!-- ***********************************
+    *    Check configuration content       *
+    ************************************ -->
+    <xacro:macro name="check_array_not_empty" params="array=^ array_name=^" >
+        <xacro:unless value="${array}">
+            <xacro:fail message="Array '${array_name}' is not loaded or is empty!"/>
+        </xacro:unless>
+    </xacro:macro>
+
+    <xacro:macro name="check_array_size" params="array=^ expected_size=^ array_name=^" >
+        <!-- Check not empty -->
+        <xacro:check_array_not_empty array="${array}" array_name="${array_name}"/>
+        <!-- Check size -->
+        <xacro:if value="${len(array) != expected_size}">
+            <xacro:fail message="Array '${array_name}' size (${len(array)}) does not match expected size (${expected_size})!"/>
+        </xacro:if>
+    </xacro:macro>
+
+    <xacro:macro name="check_robot_model_config" params="robot_model_config=^" >
+        <xacro:check_array_not_empty array="${robot_model_config['joints']}" array_name="joints"/>
+        <xacro:check_array_not_empty array="${robot_model_config['links']}" array_name="links"/>
+
+        <xacro:property name="num_joints" value="${len(robot_model_config['joints'])}"/>
+        <xacro:check_array_size array="${robot_model_config['links']}" expected_size="${num_joints + 1}" array_name="robot_model_config.links"/>
+    </xacro:macro>
+
+    <!-- ***********************************
+    *        Helpers to add links          *
+    ************************************ -->
+    <xacro:macro name="add_link" params="robot_prefix=^ link_name" >
+        <xacro:property name="link_mass" value="${dynamics_config[link_name]['mass']}"/>
+
+        <xacro:property name="link_com_x" value="${dynamics_config[link_name]['com']['xyz'][0]}"/>
+        <xacro:property name="link_com_y" value="${dynamics_config[link_name]['com']['xyz'][1]}"/>
+        <xacro:property name="link_com_z" value="${dynamics_config[link_name]['com']['xyz'][2]}"/>
+        <xacro:property name="link_com_roll" value="${dynamics_config[link_name]['com']['rpy'][0]}"/>
+        <xacro:property name="link_com_pitch" value="${dynamics_config[link_name]['com']['rpy'][1]}"/>
+        <xacro:property name="link_com_yaw" value="${dynamics_config[link_name]['com']['rpy'][2]}"/>
+
+        <xacro:property name="link_inertia_ixx" value="${dynamics_config[link_name]['inertia']['ixx']}"/>
+        <xacro:property name="link_inertia_ixy" value="${dynamics_config[link_name]['inertia']['ixy']}"/>
+        <xacro:property name="link_inertia_ixz" value="${dynamics_config[link_name]['inertia']['ixz']}"/>
+        <xacro:property name="link_inertia_iyy" value="${dynamics_config[link_name]['inertia']['iyy']}"/>
+        <xacro:property name="link_inertia_iyz" value="${dynamics_config[link_name]['inertia']['iyz']}"/>
+        <xacro:property name="link_inertia_izz" value="${dynamics_config[link_name]['inertia']['izz']}"/>
+
+        <link name="${robot_prefix}${link_name}">
+            <visual>
+                <!-- TODO(tpoignonec): Add registration for visual mesh -->
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <!-- TODO(tpoignonec): Use visual mesh (not STL ones...) -->
+                    <xacro:get_mesh link_name="${link_name}" type="visual"/>
+                </geometry>
+                <xacro:get_material link_name="${link_name}" type="visual"/>
+            </visual>
+            <collision>
+                <!-- TODO(tpoignonec): Add registration for visual mesh -->
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <xacro:get_mesh link_name="${link_name}" type="collision"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="${link_mass}"/>
+                <origin
+                    xyz="${link_com_x} ${link_com_y} ${link_com_z}"
+                    rpy="${link_com_roll} ${link_com_pitch} ${link_com_yaw}"
+                />
+                <inertia
+                    ixx="${link_inertia_ixx}"
+                    ixy="${link_inertia_ixy}"
+                    ixz="${link_inertia_ixz}"
+                    iyy="${link_inertia_iyy}"
+                    iyz="${link_inertia_iyz}"
+                    izz="${link_inertia_izz}"
+                />
+            </inertial>
+        </link>
+    </xacro:macro>
+
+    <!-- ***********************************
+    *        Helpers to add joints         *
+    ************************************ -->
+    <xacro:macro
+        name="add_joint"
+        params="
+            joint_name
+            parent_link_name
+            child_link_name
+            robot_prefix=^
+            use_soft_limits=^
+            safety_position_margin=^
+            safety_velocity_margin=^
+            safety_k_position=^
+            safety_k_velocity=^
+        ">
+        <xacro:property name="joint_type" value="revolute"/>
+
+        <xacro:property name="joint_axis_x" value="${kinematics_config[joint_name]['axis'][0]}"/>
+        <xacro:property name="joint_axis_y" value="${kinematics_config[joint_name]['axis'][1]}"/>
+        <xacro:property name="joint_axis_z" value="${kinematics_config[joint_name]['axis'][2]}"/>
+        <xacro:property name="joint_axis" value="${joint_axis_x} ${joint_axis_y} ${joint_axis_z}"/>
+
+        <xacro:property name="joint_origin_x" value="${kinematics_config[joint_name]['xyz'][0]}"/>
+        <xacro:property name="joint_origin_y" value="${kinematics_config[joint_name]['xyz'][1]}"/>
+        <xacro:property name="joint_origin_z" value="${kinematics_config[joint_name]['xyz'][2]}"/>
+        <xacro:property name="joint_origin_xyz" value="${joint_origin_x} ${joint_origin_y} ${joint_origin_z}"/>
+
+        <xacro:property name="joint_origin_roll" value="${kinematics_config[joint_name]['rpy'][0]}"/>
+        <xacro:property name="joint_origin_pitch" value="${kinematics_config[joint_name]['rpy'][1]}"/>
+        <xacro:property name="joint_origin_yaw" value="${kinematics_config[joint_name]['rpy'][2]}"/>
+        <xacro:property name="joint_origin_rpy" value="${joint_origin_roll} ${joint_origin_pitch} ${joint_origin_yaw}"/>
+
+        <xacro:property name="joint_lower_limit" value="${joint_limits_config[joint_name]['min_position']}"/>
+        <xacro:property name="joint_upper_limit" value="${joint_limits_config[joint_name]['max_position']}"/>
+        <xacro:property name="joint_velocity_limit" value="${joint_limits_config[joint_name]['max_velocity']}"/>
+
+        <xacro:property name="joint_has_effort_limits" value="${joint_limits_config[joint_name]['has_effort_limits']}"/>
+        <xacro:if value="${joint_has_effort_limits}">
+            <xacro:property name="joint_effort_limit" value="${joint_limits_config[joint_name]['max_effort']}"/>
+        </xacro:if>
+        <xacro:unless value="${joint_has_effort_limits}">
+            <xacro:property name="joint_effort_limit" value="0.0"/>
+        </xacro:unless>
+
+        <joint name="${robot_prefix}${joint_name}" type="${joint_type}">
+            <parent link="${robot_prefix}${parent_link_name}"/>
+            <child link="${robot_prefix}${child_link_name}"/>
+            <origin
+                xyz="${joint_origin_xyz}"
+                rpy="${joint_origin_rpy}"/>
+            <axis xyz="${joint_axis}"/>
+            <limit
+                lower="${joint_lower_limit}"
+                upper="${joint_upper_limit}"
+                velocity="${joint_velocity_limit}"
+                effort="${joint_effort_limit}"
+            />
+            <xacro:if value="${use_soft_limits}">
+                <safety_controller
+                    soft_lower_limit="${joint_lower_limit + safety_position_margin}"
+                    soft_upper_limit="${joint_upper_limit - safety_position_margin}"
+                    k_position="${safety_k_position}"
+                    k_velocity="${safety_k_velocity}"
+                />
+            </xacro:if>
+        </joint>
+
+    </xacro:macro>
+
+</robot>

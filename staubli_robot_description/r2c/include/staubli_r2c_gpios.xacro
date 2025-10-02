@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="r2c_gpios_control_description" params="
+        robot_prefix:=^
+        num_digital_inputs
+        num_digital_outputs
+        num_analog_inputs
+        num_analog_outputs
+    ">
+
+    <xacro:macro name="add_numbered_gpios" params="robot_prefix:=^ interface_name_prefix num_gpios cmd:=false cmd_feedback:= false state:=false current_idx=0" >
+        <xacro:if value="${current_idx != num_gpios}">
+            <xacro:property name="gpio_name" value="${interface_name_prefix}${current_idx}"/>
+            <state_interface name="${gpio_name}">
+                <param name="initial_value">0.0</param>
+            </state_interface>
+            <xacro:add_numbered_gpios
+                robot_prefix="${robot_prefix}"
+                interface_name_prefix="${interface_name_prefix}"
+                num_gpios="${num_gpios}"
+                cmd="${cmd}"
+                cmd_feedback="${cmd_feedback}"
+                state="${state}"
+                current_idx="${current_idx + 1}"/>
+        </xacro:if>
+    </xacro:macro>
+
+
+    <gpio name="${robot_prefix}gpios">
+
+        <!-- Digital GPIOs -->
+
+        <xacro:add_numbered_gpios
+            robot_prefix="${robot_prefix}"
+            interface_name_prefix="digital_input_"
+            num_gpios="${num_digital_inputs}"
+            state="true"
+            cmd="false"
+            cmd_feedback="false"
+        />
+
+        <xacro:add_numbered_gpios
+            robot_prefix="${robot_prefix}"
+            interface_name_prefix="digital_output_"
+            num_gpios="${num_digital_outputs}"
+            state="false"
+            cmd="true"
+            cmd_feedback="false"
+        />
+
+        <!-- Analog GPIOs -->
+
+        <xacro:add_numbered_gpios
+            robot_prefix="${robot_prefix}"
+            interface_name_prefix="analog_input_"
+            num_gpios="${num_analog_inputs}"
+            state="true"
+            cmd="false"
+            cmd_feedback="false"
+        />
+
+        <xacro:add_numbered_gpios
+            robot_prefix="${robot_prefix}"
+            interface_name_prefix="analog_output_"
+            num_gpios="${num_analog_outputs}"
+            state="false"
+            cmd="true"
+            cmd_feedback="false"
+        />
+
+    </gpio>
+
+    </xacro:macro>
+</robot>

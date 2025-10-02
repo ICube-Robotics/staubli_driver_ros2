@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:include filename="$(find staubli_robot_description)/urdf/include/staubli_helpers.xacro" />
+
+    <xacro:macro name="staubli_robot" params="
+        name
+        robot_prefix
+        parent
+        *origin
+        robot_model_parameters_file
+        kinematics_parameters_file
+        dynamics_parameters_file
+        joint_limits_parameters_file
+        initial_positions_file
+        meshes_parameters_file
+        force_abs_paths:=false
+        use_soft_limits:=true
+        safety_position_margin:=0.1
+        safety_velocity_margin:=0.1
+        safety_k_position:=20.0
+        safety_k_velocity:=20.0
+    ">
+        <!-- Load configuration files -->
+        <xacro:load_robot_model_config robot_model_config_file="${robot_model_parameters_file}"/>
+        <xacro:load_kinematics_config kinematics_config_file="${kinematics_parameters_file}"/>
+        <xacro:load_dynamics_config dynamics_config_file="${dynamics_parameters_file}"/>
+        <xacro:load_joint_limits_config joint_limits_config_file="${joint_limits_parameters_file}"/>
+        <xacro:load_initial_positions_config initial_positions_config_file="${initial_positions_file}"/>
+        <xacro:load_meshes_config meshes_config_file="${meshes_parameters_file}"/>
+
+        <!-- Links -->
+
+        <xacro:macro name="add_all_links" params="robot_prefix:=^ link_list:=^" >
+            <xacro:if value="${link_list}">
+                <!-- Update current target -->
+                <xacro:property name="link_name" value="${link_list.pop(0)}"/>
+                <!-- Add new link -->
+                <xacro:add_link robot_prefix="${robot_prefix}" link_name="${link_name}"/>
+                <!-- recursively call self to loop over the rest of the list -->
+                <xacro:add_all_links robot_prefix="${robot_prefix}" link_list="${link_list}"/>
+            </xacro:if>
+        </xacro:macro>
+
+        <xacro:add_all_links
+            link_list="${list(link_names)}"
+        />
+
+        <!-- Base link  joint -->
+        <xacro:property
+            name="base_link_name"
+            value="${list(link_names)[0]}"
+        />
+        <joint name="${robot_prefix}base_joint" type="fixed">
+            <xacro:insert_block name="origin" />
+            <parent link="${parent}" />
+            <child link="${robot_prefix}${base_link_name}" />
+        </joint>
+
+        <!-- Actuated joints -->
+
+        <xacro:macro name="add_all_joints" params="robot_prefix:=^ joints_list:=^ link_list:=^" >
+            <xacro:if value="${joints_list}">
+                <!-- Update current target -->
+                <xacro:property name="joint_name" value="${joints_list.pop(0)}"/>
+                <xacro:property name="parent_link_name" value="${link_list.pop(0)}"/>
+                <xacro:property name="child_link_name" value="${link_list[0]}"/>
+                <!-- Add new joint -->
+                <xacro:add_joint
+                    joint_name="${joint_name}"
+                    parent_link_name="${parent_link_name}"
+                    child_link_name="${child_link_name}"
+                />
+                <!-- recursively call self to loop over the rest of the list -->
+                <xacro:add_all_joints robot_prefix="${robot_prefix}" joints_list="${joints_list}" link_list="${link_list}"/>
+            </xacro:if>
+        </xacro:macro>
+
+        <xacro:add_all_joints
+            joints_list="${list(joint_names)}"
+            link_list="${list(link_names)}"
+        />
+
+        <!-- End effector -->
+
+        <link name="${robot_prefix}${end_effector_frame_name}" />
+        <joint name="${robot_prefix}end_effector_fixed_joint" type="fixed">
+            <parent link="${robot_prefix}${end_effector_parent_link_name}"/>
+            <child link="${robot_prefix}${end_effector_frame_name}"/>
+            <origin xyz="${end_effector_frame_xyz}" rpy="${end_effector_frame_rpy}"/>
+        </joint>
+
+        <xacro:if value="${has_ft_sensor}">
+            <!-- F/T sensor frame -->
+            <link name="${robot_prefix}ft_sensor" />
+            <joint name="${robot_prefix}ft_sensor_fixed_joint" type="fixed">
+                <parent link="${robot_prefix}${ft_sensor_parent_link_name}"/>
+                <child link="${robot_prefix}ft_sensor"/>
+                <origin xyz="${ft_sensor_frame_xyz}" rpy="${ft_sensor_frame_rpy}"/>
+            </joint>
+        </xacro:if>
+    </xacro:macro>
+</robot>

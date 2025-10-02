@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!-- |                              Staubli Robot Description                          | -->
+<!-- |                                                                                 | -->
+<!-- | Part of the ROS 2 package "staubli_robot_description"                           | -->
+<!-- | Licensed under the Apache License, Version 2.0.                                 | -->
+<!-- | Copyright (c) 2025 ICube Laboratory, Strasbourg, France                         | -->
+<!-- |                                                                                 | -->
+<!-- | Author: Thibault Poignonec <thibault.poignonec@gmail.com>                       | -->
+<!-- =================================================================================== -->
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:arg name="robot_model" default="???"/>
+    <xacro:arg name="name" default="$(arg robot_model)"/>
+    <xacro:arg name="robot_prefix" default=""/>
+
+    <!-- Set the robot name using the property -->
+    <xacro:attribute name="name" value="$(arg name)" />
+
+    <!-- Default configuration directory -->
+    <xacro:property name="config_dir" value="$(find staubli_robot_description)/config/$(arg robot_model)"/>
+
+    <!-- Configuration files -->
+    <xacro:arg name="robot_model_parameters_file" default="${config_dir}/robot_model.yaml"/>
+    <xacro:arg name="kinematics_parameters_file" default="${config_dir}/kinematics.yaml"/>
+    <xacro:arg name="dynamics_parameters_file" default="${config_dir}/dynamics.yaml"/>
+    <xacro:arg name="joint_limits_parameters_file" default="${config_dir}/joint_limits.yaml"/>
+    <xacro:arg name="meshes_parameters_file" default="${config_dir}/meshes.yaml"/>
+    <xacro:arg name="initial_positions_file" default="$(find staubli_robot_description)/config/initial_positions.yaml"/>
+
+    <!-- Safety controller parameters-->
+    <xacro:arg name="use_soft_limits" default="true"/>
+    <xacro:arg name="safety_position_margin" default="0.1"/>
+    <xacro:arg name="safety_velocity_margin" default="0.1"/>
+    <xacro:arg name="safety_k_position" default="0.1"/>
+    <xacro:arg name="safety_k_velocity" default="10.0"/>
+
+    <!-- ROS2 Control parameters -->
+    <xacro:arg name="use_mock_hardware" default="true"/>
+    <xacro:arg name="mock_sensor_commands" default="false"/>
+
+    <!-- Toggle absolute / relative mesh paths -->
+    <xacro:arg name="force_abs_paths" default="false"/>
+
+    <!-- Default world link -->
+    <link name="world"/>
+
+    <!-- Staubli robot description -->
+    <xacro:include filename="$(find staubli_robot_description)/urdf/staubli_macro.xacro" />
+    <xacro:staubli_robot
+        name="$(arg name)"
+        robot_prefix="$(arg robot_prefix)"
+        parent="world"
+        robot_model_parameters_file="$(arg robot_model_parameters_file)"
+        kinematics_parameters_file="$(arg kinematics_parameters_file)"
+        dynamics_parameters_file="$(arg dynamics_parameters_file)"
+        joint_limits_parameters_file="$(arg joint_limits_parameters_file)"
+        initial_positions_file="$(arg initial_positions_file)"
+        meshes_parameters_file="$(arg meshes_parameters_file)"
+        force_abs_paths="$(arg force_abs_paths)"
+        use_soft_limits="$(arg use_soft_limits)"
+        safety_position_margin="$(arg safety_position_margin)"
+        safety_velocity_margin="$(arg safety_velocity_margin)"
+        safety_k_position="$(arg safety_k_position)"
+        safety_k_velocity="$(arg safety_k_velocity)"
+    >
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:staubli_robot>
+
+    <!-- ROS2 control description -->
+    <xacro:include filename="$(find staubli_robot_description)/r2c/staubli.r2c.xacro" />
+    <xacro:ur_ros2_control
+        name="$(arg name)"
+        robot_prefix="$(arg robot_prefix)"
+        robot_model_parameters_file="$(arg robot_model_parameters_file)"
+        initial_positions_file="$(arg initial_positions_file)"
+        use_mock_hardware="$(arg use_mock_hardware)"
+        mock_sensor_commands="$(arg mock_sensor_commands)"
+    />
+</robot>
