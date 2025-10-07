@@ -1,0 +1,19 @@
+joint_names:
+  - joint_1
+  - joint_2
+  - joint_3
+  - joint_4
+  - joint_5
+  - joint_6
+
+link_names:
+  - base_link
+  - link_1
+  - link_2
+  - link_3
+  - link_4
+  - link_5
+  - link_6
+
+ft_sensor_frame: ft_sensor
+ee_frame: tool0

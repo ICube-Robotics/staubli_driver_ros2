@@ -5,21 +5,46 @@
     <xacro:include filename="$(find staubli_robot_description)/urdf/include/staubli_materials.xacro"/>
 
     <!-- ***********************************
+    *         Utility macros               *
+    ************************************ -->
+    <!-- Custom fail macro since xacro doesn't have a built-in fail -->
+    <xacro:macro name="fail" params="message">
+        <!-- Force immediate evaluation of xacro.error() by using it in a conditional -->
+        <xacro:if value="${xacro.fatal(message) or True}">
+            <!-- This will never execute, but the error above will stop processing -->
+        </xacro:if>
+    </xacro:macro>
+
+    <!-- ***********************************
     *    Loaders for the configuration     *
     ************************************ -->
+    <xacro:macro name="load_default_names" params="default_names_file" >
+        <xacro:property name="default_names_dict" value="${xacro.load_yaml(default_names_file)}"/>
+
+        <xacro:property name="default_joint_names" value="${default_names_dict['joint_names']}" scope="parent"/>
+        <xacro:property name="default_link_names" value="${default_names_dict['link_names']}" scope="parent"/>
+
+        <xacro:property name="default_ft_sensor_frame" value="${default_names_dict['ft_sensor_frame']}" scope="parent"/>
+        <xacro:property name="default_ee_frame" value="${default_names_dict['ee_frame']}" scope="parent"/>
+    </xacro:macro>
+
     <xacro:macro name="load_robot_model_config" params="robot_model_config_file:=^" >
         <xacro:property name="model_robot_config_dict" value="${xacro.load_yaml(robot_model_config_file)}"/>
 
         <!-- Export robot model properties -->
         <xacro:property name="model_robot_config" value="${model_robot_config_dict['robot_model']}" scope="parent"/>
-        <xacro:check_robot_model_config robot_model_config="${model_robot_config}"/>
+
+        <!-- Export joint and link names, based on robot type 6 DoF arm only for now -->
+        <xacro:load_default_names default_names_file="$(find staubli_robot_description)/urdf/include/default_names.yaml"/>
+
+        <xacro:property name="joint_names" value="${default_joint_names}" scope="parent"/>
+        <xacro:property name="link_names" value="${default_link_names}" scope="parent"/>
+        <xacro:property name="ft_sensor_frame_name" value="${default_ft_sensor_frame}" scope="parent"/>
+        <xacro:property name="end_effector_frame_name" value="${default_ee_frame}" scope="parent"/>
 
         <!-- Export common robot properties individually -->
         <xacro:property name="has_ft_sensor" value="${model_robot_config['has_ft_sensor']}" scope="parent"/>
         <xacro:property name="has_joint_torque_sensor" value="${model_robot_config['has_joint_torque_sensor']}" scope="parent"/>
-
-        <xacro:property name="joint_names" value="${model_robot_config['joints']}" scope="parent"/>
-        <xacro:property name="link_names" value="${model_robot_config['links']}" scope="parent"/>
 
         <xacro:property name="num_digital_inputs" value="${model_robot_config['io']['num_digital_inputs']}" scope="parent"/>
         <xacro:property name="num_digital_outputs" value="${model_robot_config['io']['num_digital_outputs']}" scope="parent"/>
@@ -27,11 +52,6 @@
         <xacro:property name="num_analog_outputs" value="${model_robot_config['io']['num_analog_outputs']}" scope="parent"/>
 
         <!-- End effector properties -->
-        <xacro:property
-            name="end_effector_frame_name"
-            value="${model_robot_config['end_effector']['frame_name']}"
-            scope="parent"
-        />
         <xacro:property
             name="end_effector_parent_link_name"
             value="${model_robot_config['end_effector']['parent_link']}"
@@ -133,6 +153,8 @@
             scope="parent"
         />
 
+        <!-- Check robot model config content -->
+        <xacro:check_robot_model_config robot_model_config="${model_robot_config}"/>
     </xacro:macro>
 
     <xacro:macro name="load_kinematics_config" params="kinematics_config_file:=^" >
@@ -187,7 +209,7 @@
     *    Check configuration content       *
     ************************************ -->
     <xacro:macro name="check_array_not_empty" params="array=^ array_name=^" >
-        <xacro:unless value="${array}">
+        <xacro:unless value="${len(array) > 0}">
             <xacro:fail message="Array '${array_name}' is not loaded or is empty!"/>
         </xacro:unless>
     </xacro:macro>
@@ -202,11 +224,31 @@
     </xacro:macro>
 
     <xacro:macro name="check_robot_model_config" params="robot_model_config=^" >
-        <xacro:check_array_not_empty array="${robot_model_config['joints']}" array_name="joints"/>
-        <xacro:check_array_not_empty array="${robot_model_config['links']}" array_name="links"/>
+        <xacro:check_array_not_empty array="${joint_names}" array_name="joints"/>
+        <xacro:check_array_not_empty array="${link_names}" array_name="links"/>
 
-        <xacro:property name="num_joints" value="${len(robot_model_config['joints'])}"/>
-        <xacro:check_array_size array="${robot_model_config['links']}" expected_size="${num_joints + 1}" array_name="robot_model_config.links"/>
+        <xacro:property name="num_joints" value="${len(joint_names)}"/>
+        <xacro:check_array_size
+            array="${link_names}"
+            expected_size="${num_joints + 1}"
+            array_name="robot_model_config.links"/>
+
+        <!-- Check that end_effector_parent_link_name is valid -->
+        <xacro:property name="last_link" value="${link_names[-1]}"/>
+        <xacro:property name="valid_ee_parent" value="${end_effector_parent_link_name == last_link}"/>
+
+        <xacro:if value="${has_ft_sensor}">
+            <xacro:property name="valid_ee_parent" value="${valid_ee_parent or (end_effector_parent_link_name == ft_sensor_frame_name)}"/>
+        </xacro:if>
+
+        <xacro:unless value="${valid_ee_parent}">
+            <xacro:if value="${has_ft_sensor}">
+                <xacro:fail message="End effector parent link must be either the last link '${last_link}' or the F/T sensor frame '${ft_sensor_frame_name}' ('${end_effector_parent_link_name}' provided)"/>
+            </xacro:if>
+            <xacro:unless value="${has_ft_sensor}">
+                <xacro:fail message="End effector parent link must be the last link '${last_link}' as there is no F/T sensor ('${end_effector_parent_link_name}' provided)"/>
+            </xacro:unless>
+        </xacro:unless>
     </xacro:macro>
 
     <!-- ***********************************

@@ -81,6 +81,18 @@
             link_list="${list(link_names)}"
         />
 
+
+        <xacro:if value="${has_ft_sensor}">
+            <!-- F/T sensor frame -->
+
+            <link name="${robot_prefix}${ft_sensor_frame_name}" />
+            <joint name="${robot_prefix}ft_sensor_fixed_joint" type="fixed">
+                <parent link="${robot_prefix}${ft_sensor_parent_link_name}"/>
+                <child link="${robot_prefix}${ft_sensor_frame_name}"/>
+                <origin xyz="${ft_sensor_frame_xyz}" rpy="${ft_sensor_frame_rpy}"/>
+            </joint>
+        </xacro:if>
+
         <!-- End effector -->
 
         <link name="${robot_prefix}${end_effector_frame_name}" />
@@ -90,14 +102,5 @@
             <origin xyz="${end_effector_frame_xyz}" rpy="${end_effector_frame_rpy}"/>
         </joint>
 
-        <xacro:if value="${has_ft_sensor}">
-            <!-- F/T sensor frame -->
-            <link name="${robot_prefix}ft_sensor" />
-            <joint name="${robot_prefix}ft_sensor_fixed_joint" type="fixed">
-                <parent link="${robot_prefix}${ft_sensor_parent_link_name}"/>
-                <child link="${robot_prefix}ft_sensor"/>
-                <origin xyz="${ft_sensor_frame_xyz}" rpy="${ft_sensor_frame_rpy}"/>
-            </joint>
-        </xacro:if>
     </xacro:macro>
 </robot>

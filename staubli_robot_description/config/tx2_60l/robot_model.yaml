@@ -11,27 +11,8 @@ robot_model:
   has_joint_torque_sensor: false  # Whether the robot provides joint torque measurements
   has_ft_sensor: false  # Whether the robot has a force/torque sensor at the end-effector
 
-  # Link names, ordered from base to last link (before end-effector)
-  links:
-    - base_link
-    - link_1
-    - link_2
-    - link_3
-    - link_4
-    - link_5
-    - link_6
-
-  # Actuated joint names
-  joints:
-    - joint_1
-    - joint_2
-    - joint_3
-    - joint_4
-    - joint_5
-    - joint_6
-
   end_effector:
-    frame_name: tool0  # Name of the end-effector link
+    # Config of the end-effector frame (tool0)
     parent_link: link_6  # Parent link of the end-effector (last robot link or F/T sensor if present)
     # Transformation from parent_link to end_effector
     xyz: [0.0, 0.0, 0.0]
