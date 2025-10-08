@@ -1,0 +1,26 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: staubli_robot_description
+    relative_path: urdf/staubli.urdf.xacro
+    xacro_args: robot_model:=tx2_60l
+  srdf:
+    relative_path: config/tx2_60l.srdf
+  package_settings:
+    author_name: Thibault Poignonec
+    author_email: thibault.poignonec@gmail.com
+    generated_timestamp: 1759847051
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:arg name="robot_model" default="???"/>
+    <xacro:arg name="name" default="staubli"/>
+    <xacro:arg name="robot_prefix" default=""/>
+
+    <!-- Set the robot name using the property -->
+    <xacro:attribute name="name" value="$(arg name)" />
+
+    <!-- Robot config file -->
+    <xacro:property name="config_dir" value="$(find staubli_robot_description)/config/$(arg robot_model)"/>
+    <xacro:arg name="robot_model_parameters_file" default="${config_dir}/robot_model.yaml"/>
+
+    <!-- SRDF macro -->
+
+    <xacro:include filename="$(find staubli_moveit_config)/srdf/staubli_macro.srdf.xacro"/>
+
+    <xacro:staubli_srdf
+        robot_model="$(arg robot_model)"
+        robot_prefix="$(arg robot_prefix)"
+        robot_model_parameters_file="$(arg robot_model_parameters_file)"/>
+
+</robot>

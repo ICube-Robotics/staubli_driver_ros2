@@ -15,8 +15,15 @@
 # Author: Thibault Poignonec <thibault.poignonec@gmail.com>
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    LogInfo,
+    RegisterEventHandler,
+    TimerAction,
+)
 from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessStart
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -83,7 +90,6 @@ def generate_launch_description():
     )
 
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    start_controller = LaunchConfiguration("start_controller")
 
     # Robot description
 
@@ -158,25 +164,6 @@ def generate_launch_description():
             )
         ]
 
-    # Start a controller if required
-    start_controller_service = ExecuteProcess(
-        cmd=[
-            "ros2",
-            "service",
-            "call",
-            "/controller_manager/switch_controller",
-            "controller_manager_msgs/srv/SwitchController",
-            "{activate_controllers: [",
-            start_controller,
-            "]",
-            ", deactivate_controllers: [], strictness: 1, activate_asap: true}",
-        ],
-        condition=IfCondition(NotEqualsSubstitution(start_controller, "none")),
-        output="screen",
-    )
-
-    load_controllers.append(start_controller_service)
-
     # Rviz
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("staubli_bringup"), "rviz", "default.rviz"]
@@ -190,6 +177,42 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("gui")),
     )
 
+    # Start controller when control_node starts, with a delay for initialization
+    start_controller_cmd = ExecuteProcess(
+        cmd=[
+            "ros2",
+            "control",
+            "set_controller_state",
+            LaunchConfiguration("start_controller"),
+            "active",
+        ],
+        output="screen",
+    )
+
+    start_controller = RegisterEventHandler(
+        OnProcessStart(
+            target_action=control_node,
+            on_start=[
+                TimerAction(
+                    period=2.0,  # Wait a bit after controller manager starts
+                    actions=[
+                        LogInfo(
+                            msg=[
+                                "\033[32mStarting controller ",
+                                LaunchConfiguration("start_controller"),
+                                "\033[0m",
+                            ]
+                        ),
+                        start_controller_cmd,
+                    ],
+                    condition=IfCondition(
+                        NotEqualsSubstitution(LaunchConfiguration("start_controller"), "none")
+                    ),
+                )
+            ],
+        )
+    )
+
     # Launch description
     nodes = [
         robot_state_publisher_node,
@@ -197,4 +220,4 @@ def generate_launch_description():
         rviz_node,
     ]
 
-    return LaunchDescription(declared_arguments + nodes + load_controllers)
+    return LaunchDescription(declared_arguments + nodes + load_controllers + [start_controller])

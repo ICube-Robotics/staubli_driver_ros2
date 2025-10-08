@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # Author: Thibault Poignonec <thibault.poignonec@gmail.com>
-# Adapted from https://github.com/UniversalRobots/Universal_Robots_ROS2_Description/blob/rolling/test/test_ur_urdf_xacro.py  # noqa: E501
 
 import os
 import shutil
@@ -27,11 +26,9 @@ import pytest
 
 @pytest.mark.parametrize("robot_model", ["tx2_60l"])
 @pytest.mark.parametrize("prefix", ["", "staubli_"])
-@pytest.mark.parametrize("use_mock_hardware", [True, False])
-def test_urdf_xacro(robot_model, prefix, use_mock_hardware):
-    print(f'Test XACRO description for model "{robot_model}".')
+def test_urdf_xacro(robot_model, prefix):
+    print(f'Test XACRO SRDF for model "{robot_model}".')
     print(f'  - prefix: "{prefix}"')
-    print(f"  - use_mock_hardware: {use_mock_hardware}")
 
     description_file_path = os.path.join(
         get_package_share_directory("staubli_robot_description"), "urdf", "staubli.urdf.xacro"
@@ -45,7 +42,6 @@ def test_urdf_xacro(robot_model, prefix, use_mock_hardware):
         f"{description_file_path} "
         f"robot_model:={robot_model} "
         f"prefix:={prefix} "
-        f"use_mock_hardware:={use_mock_hardware} "
         f"> {tmp_urdf_file}"
     )
     check_urdf_command = f'{shutil.which("check_urdf")} {tmp_urdf_file}'

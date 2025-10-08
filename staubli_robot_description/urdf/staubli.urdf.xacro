@@ -10,7 +10,7 @@
 
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
     <xacro:arg name="robot_model" default="???"/>
-    <xacro:arg name="name" default="$(arg robot_model)"/>
+    <xacro:arg name="name" default="staubli"/>
     <xacro:arg name="robot_prefix" default=""/>
 
     <!-- Set the robot name using the property -->

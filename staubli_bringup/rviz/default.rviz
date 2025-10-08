@@ -6,6 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /TF1
+        - /TF1/Frames1
+        - /RobotModel1
       Splitter Ratio: 0.5
     Tree Height: 555
   - Class: rviz_common/Selection
@@ -53,21 +56,21 @@ Visualization Manager:
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         base_link:
           Value: true
         link_1:
-          Value: true
+          Value: false
         link_2:
-          Value: true
+          Value: false
         link_3:
-          Value: true
+          Value: false
         link_4:
-          Value: true
+          Value: false
         link_5:
-          Value: true
+          Value: false
         link_6:
-          Value: true
+          Value: false
         tool0:
           Value: true
         world:
@@ -103,8 +106,7 @@ Visualization Manager:
         Value: /robot_description
       Enabled: true
       Links:
-        All Links Enabled:
-          {}
+        All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
@@ -113,34 +115,41 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         link_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         link_4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         link_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         link_6:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         tool0:
           Alpha: 1
           Show Axes: false
-          Show Trail: false
+          Show Trail: true
         world:
           Alpha: 1
           Show Axes: false
@@ -235,5 +244,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 28
-  Y: 28
+  X: -4
+  Y: -4

@@ -9,8 +9,14 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY config launch rviz test
+  DIRECTORY config launch rviz scripts test
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(PROGRAMS
+  scripts/wait_for_robot_description.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 ament_package()
