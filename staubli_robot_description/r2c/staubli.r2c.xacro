@@ -29,10 +29,10 @@
             <xacro:unless value="${use_mock_hardware}">
                 <plugin>staubli_robot_driver/StaubliHardwareInterface</plugin>
                 <param name="robot_ip">${robot_ip}</param>
-                <param name="control_port">56123</param>
-                <param name="diagnostic_port">56124</param>
-                <param name="local_control_port">56123</param>
-                <param name="local_diagnostic_port">56124</param>
+                <param name="control_port">11000</param>
+                <param name="diagnostic_port">11001</param>
+                <param name="local_control_port">11000</param>
+                <param name="local_diagnostic_port">11001</param>
                 <param name="num_digital_inputs">${num_digital_inputs}</param>
                 <param name="num_digital_outputs">${num_digital_outputs}</param>
                 <param name="num_analog_inputs">${num_analog_inputs}</param>
