@@ -61,6 +61,14 @@ def generate_launch_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
+            "robot_ip",
+            default_value="172.31.0.1",
+            description="IP address of the robot.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_sim_time",
             default_value="false",
             description="Use simulation (Gazebo) clock if true.",
@@ -107,6 +115,9 @@ def generate_launch_description():
             " ",
             "use_mock_hardware:=",
             use_mock_hardware,
+            " ",
+            "robot_ip:=",
+            LaunchConfiguration("robot_ip"),
         ]
     )
     robot_description = {

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<library path="staubli_robot_driver_hardware_interface">
+  <class
+    name="staubli_robot_driver/StaubliHardwareInterface"
+    type="staubli_robot_driver::StaubliHardwareInterface"
+    base_class_type="hardware_interface::SystemInterface"
+>
+    <description>
+      Staubli robot hardware interface for ros2_control framework.
+      Provides communication with Staubli robots through UDP socket protocol.
+      Supports position and velocity control modes as well as GPIO operations.
+    </description>
+  </class>
+</library>

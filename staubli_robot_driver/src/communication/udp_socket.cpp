@@ -29,7 +29,13 @@ UDPSocket::~UDPSocket() { }
 
 bool UDPSocket::connect(
     const std::string& remote_address, uint16_t remote_port, uint16_t local_port) {
-    return impl_->connect(remote_address, remote_port, local_port);
+    return impl_->connect(remote_address, remote_port, "", local_port);
+}
+
+bool UDPSocket::connect(
+    const std::string& remote_address, uint16_t remote_port,
+    const std::string& local_address, uint16_t local_port) {
+    return impl_->connect(remote_address, remote_port, local_address, local_port);
 }
 
 bool UDPSocket::disconnect() {

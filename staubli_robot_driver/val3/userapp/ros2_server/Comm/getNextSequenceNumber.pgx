@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="getNextSequenceNumber">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_nSequenceNumber" type="num" xsi:type="element" use="reference"/>
+    </Parameters>
+    <Code><![CDATA[begin
+    x_nSequenceNumber = x_nSequenceNumber + 1
+    if (x_nSequenceNumber > 65535)
+      // Wrap around (uint16_t)
+      x_nSequenceNumber = 0
+    endIf
+
+end]]></Code>
+  </Program>
+</Programs>

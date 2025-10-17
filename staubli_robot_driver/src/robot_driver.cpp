@@ -89,6 +89,7 @@ bool RobotDriver::connect(const NetworkConfig& config, int timeout_ms)
     if (!control_socket_->connect(
             network_config_.robot_ip,
             network_config_.control_port,
+            network_config_.local_ip,
             network_config_.local_control_port))
     {
         RCLCPP_ERROR(
@@ -122,6 +123,7 @@ bool RobotDriver::connect(const NetworkConfig& config, int timeout_ms)
     if (!diagnostics_socket_->connect(
             network_config_.robot_ip,
             network_config_.diagnostics_port,
+            network_config_.local_ip,
             network_config_.local_diagnostics_port))
     {
         RCLCPP_ERROR(
@@ -167,13 +169,15 @@ bool RobotDriver::connect(const NetworkConfig& config, int timeout_ms)
     size_t number_of_tries = 0;
     RobotStateMessage robot_state_msg;
     DiagnosticDataMessage diagnostic_data_msg;
+    RCLCPP_INFO(logger_, "Waiting for valid messages from the robot...");
     while (rclcpp::Clock().now() - start_connect_time <
            rclcpp::Duration(std::chrono::milliseconds(timeout_ms))) {
         number_of_tries++;
         RCLCPP_DEBUG(logger_,
             "Waiting for valid messages from the robot... (try n°%zu)", number_of_tries);
         cmd_interface_ready = read_robot_state(robot_state_msg);
-        diag_interface_ready = read_diagnostic_data(diagnostic_data_msg);
+        // TODO(tpoignonec): implement diagnostic data reading once available
+        diag_interface_ready = true;  // read_diagnostic_data(diagnostic_data_msg);
         if (!cmd_interface_ready) {
             RCLCPP_WARN(logger_, "State/Control interface not yet ready");
         }
@@ -233,6 +237,8 @@ bool RobotDriver::connect(const NetworkConfig& config, int timeout_ms)
             current_diagnostic_data_.robot_firmware_version.patch);
         // TODO(tpoignonec): add check for supported VAL3 versions
     }
+
+    RCLCPP_INFO(logger_, "Successfully connected to Staubli robot");
 
     return interfaces_ready;
 }
@@ -302,6 +308,8 @@ bool RobotDriver::send_stop_all_command()
         RCLCPP_ERROR(logger_, "Failed to prepare STOP (motion + IOs) command");
         return false;
     }
+    stop_command.header.sequence_number = static_cast<uint16_t>(
+        get_current_message_sequence());
     // Send the command
     if (!control_interface_->send_message(stop_command)) {
         RCLCPP_ERROR(logger_, "Failed to send STOP (motion + IOs) command!");
@@ -366,12 +374,11 @@ bool RobotDriver::read_robot_state(RobotStateMessage& state)
     }
     // Check lost packages (warning only)
     if (status.lost_packages > 0) {
-        RCLCPP_WARN(logger_, "Detected %zu lost state messages", status.lost_packages);
+        // RCLCPP_WARN(logger_, "Detected %zu lost state messages", status.lost_packages);
     }
     // Update the output state and last valid sequence ID, ONLY if valid
     state = current_robot_state_;
-    last_valid_sequence_id_ = \
-        static_cast<size_t>(current_robot_state_.header.sequence_number);
+    last_valid_sequence_id_ = static_cast<size_t>(state.header.sequence_number);
     return true;
 }
 

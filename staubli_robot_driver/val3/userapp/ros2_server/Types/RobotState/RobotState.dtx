@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Database xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Data/2">
+  <Datas>
+    <Data name="bIsValid" access="public" xsi:type="array" type="bool" size="1">
+      <Value key="0" value="false" />
+    </Data>
+
+    <Data name="nRobotMode" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nRobotStatus" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nControlMode" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nSequenceDelay" access="public" xsi:type="array" type="num" size="1" />
+
+    <!-- Status flags -->
+    <Data name="bDrivePowered" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bBrakeReleased" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bMotionPossible" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bInMotion" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bInError" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bWaitAck" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bEStopped" access="public" xsi:type="array" type="bool" size="1" />
+
+    <!-- Valid fields -->
+    <Data name="bValidPosition" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bValidVelocity" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bValidTorque" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bValidFtSensor" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bValidDigitalInputs" access="public" xsi:type="array" type="bool" size="1" />
+    <Data name="bValidAnalogInputs" access="public" xsi:type="array" type="bool" size="1" />
+
+    <!-- Robot state -->
+    <Data name="jointPositions" access="public" xsi:type="array" type="jointRx" size="1" />
+    <Data name="jointVelocities" access="public" xsi:type="array" type="jointRx" size="1" />
+
+    <!-- Joint torque sensor / estimates (Optional) -->
+    <Data name="jointTorques" access="public" xsi:type="array" type="jointRx" size="1" />
+
+    <!-- Force/Torque sensor (Optional) -->
+    <Data name="nFtSensorValues" access="public" xsi:type="array" type="num" size="6" />
+
+    <!-- IOs -->
+    <Data name="nDigitalInputs" access="public" xsi:type="array" type="bool" size="16" />
+    <Data name="nAnalogInputs" access="public" xsi:type="array" type="num" size="4" />
+  </Datas>
+</Database>

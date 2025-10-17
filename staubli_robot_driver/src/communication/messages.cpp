@@ -31,12 +31,14 @@ namespace staubli_robot_driver {
 RobotStateMessage::RobotStateMessage() : Message()
 {
     // Initialize header
-    header.message_type = static_cast<uint16_t>(MessageType::ROBOT_STATE);
+    header.message_type = static_cast<uint8_t>(MessageType::ROBOT_STATE);
     header.payload_size = static_cast<uint16_t>(
         get_serialized_size() - FrameHeader::get_serialized_size());
     header.protocol_version = PROTOCOL_VERSION;
     header.magic_number = MAGIC_NUMBER;
     header.sequence_number = 0;
+    // Sequence delay
+    sequence_delay = 1000;
     // Initialize measurements
     joint_positions.fill(0.0);
     joint_velocities.fill(0.0);
@@ -46,7 +48,7 @@ RobotStateMessage::RobotStateMessage() : Message()
     analog_inputs.fill(0.0);
 }
 
-size_t RobotStateMessage::message_size() { return 131; }
+size_t RobotStateMessage::message_size() { return 129; }
 
 bool RobotStateMessage::serialize(uint8_t* buffer, size_t buffer_size) const
 {
@@ -100,6 +102,7 @@ bool RobotStateMessage::serialize(uint8_t* buffer, size_t buffer_size) const
     size_t offset = header.get_serialized_size();
 
     // Serialize the rest of the data
+    offset += serialize_type(sequence_delay, buffer + offset);
     offset += serialize_type(static_cast<uint8_t>(operation_mode), buffer + offset);
     offset += serialize_type(status_flags, buffer + offset);
     offset += serialize_type(valid_fields_flags, buffer + offset);
@@ -109,6 +112,13 @@ bool RobotStateMessage::serialize(uint8_t* buffer, size_t buffer_size) const
     offset += serialize_array<double, 6>(ft_sensor, buffer + offset);
     offset += serialize_type(digital_inputs_flags, buffer + offset);
     offset += serialize_array<double, 4>(analog_inputs, buffer + offset);
+
+    if (offset != get_serialized_size()) {
+        std::cerr << "RobotState::serialize: "
+            << "Serialized size ( " << offset
+            << " ) does not match expected size (" << get_serialized_size() << ")" << std::endl;
+        return false;
+    }
 
     return true;
 }
@@ -132,6 +142,7 @@ bool RobotStateMessage::deserialize(uint8_t* buffer, size_t buffer_size)
     // Validate header fields
 
     // Deserialize the rest of the data
+    offset += deserialize_type(buffer + offset, sequence_delay);
     uint8_t operation_mode_u8;
     offset += deserialize_type(buffer + offset, operation_mode_u8);
     operation_mode = static_cast<OperationMode>(operation_mode_u8);
@@ -173,6 +184,14 @@ bool RobotStateMessage::deserialize(uint8_t* buffer, size_t buffer_size)
         digital_inputs[i] = (digital_inputs_flags & (1 << i)) != 0;
     }
     offset += deserialize_array<double, 4>(buffer + offset, analog_inputs);
+
+    if (offset != get_serialized_size()) {
+        std::cerr << "RobotState::serialize: "
+            << "Serialized size ( " << offset
+            << " ) does not match expected size (" << get_serialized_size() << ")" << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -181,7 +200,7 @@ bool RobotStateMessage::deserialize(uint8_t* buffer, size_t buffer_size)
 RobotCommandMessage::RobotCommandMessage() : Message()
 {
     // Initialize header
-    header.message_type = static_cast<uint16_t>(MessageType::ROBOT_COMMAND);
+    header.message_type = static_cast<uint8_t>(MessageType::ROBOT_COMMAND);
     header.payload_size = static_cast<uint16_t>(
         get_serialized_size() - FrameHeader::get_serialized_size());
     header.protocol_version = PROTOCOL_VERSION;
@@ -194,7 +213,10 @@ RobotCommandMessage::RobotCommandMessage() : Message()
     analog_outputs.fill(0.0);
 }
 
-size_t RobotCommandMessage::message_size() { return 131; }
+size_t RobotCommandMessage::message_size() {
+    // 8 (header) + 4 (controller period) + 1 (cmd type) + 6*4 (cmd data) + 2 (Doubt) + 4*4 (Aout)
+    return 55;
+}
 
 bool RobotCommandMessage::serialize(uint8_t* buffer, size_t buffer_size) const
 {
@@ -210,7 +232,7 @@ bool RobotCommandMessage::serialize(uint8_t* buffer, size_t buffer_size) const
             << "Header payload size does not match RobotCommand size" << std::endl;
         return false;
     }
-    if (header.message_type != static_cast<uint16_t>(MessageType::ROBOT_COMMAND)) {
+    if (header.message_type != static_cast<uint8_t>(MessageType::ROBOT_COMMAND)) {
         std::cerr << "RobotCommand::serialize: "
             << "Invalid message type: " << header.message_type << std::endl;
         return false;
@@ -224,7 +246,10 @@ bool RobotCommandMessage::serialize(uint8_t* buffer, size_t buffer_size) const
     }
     size_t offset = header.get_serialized_size();
 
-    // Serialize motion command
+    // Serialize controller period
+    offset += serialize_type(controller_period, buffer + offset);
+
+    // Serialize motion command type
     offset += serialize_type(static_cast<uint8_t>(command_type), buffer + offset);
     offset += serialize_array<double, 6>(command_reference, buffer + offset);
 
@@ -237,6 +262,13 @@ bool RobotCommandMessage::serialize(uint8_t* buffer, size_t buffer_size) const
     }
     offset += serialize_type(digital_outputs_flags, buffer + offset);
     offset += serialize_array<double, 4>(analog_outputs, buffer + offset);
+
+    if (offset != get_serialized_size()) {
+        std::cerr << "RobotCommand::serialize: "
+            << "Serialized size ( " << offset
+            << " ) does not match expected size (" << get_serialized_size() << ")" << std::endl;
+        return false;
+    }
 
     return true;
 }
@@ -263,11 +295,14 @@ bool RobotCommandMessage::deserialize(uint8_t* buffer, size_t buffer_size)
             << "Header payload size does not match RobotCommand size" << std::endl;
         return false;
     }
-    if (header.message_type != static_cast<uint16_t>(MessageType::ROBOT_COMMAND)) {
+    if (header.message_type != static_cast<uint8_t>(MessageType::ROBOT_COMMAND)) {
         std::cerr << "RobotCommand::deserialize: "
             << "Invalid message type: " << header.message_type << std::endl;
         return false;
     }
+
+    // Deserialize controller period
+    offset += deserialize_type(buffer + offset, controller_period);
 
     // Deserialize motion command
     uint8_t command_type_u8;
@@ -283,6 +318,13 @@ bool RobotCommandMessage::deserialize(uint8_t* buffer, size_t buffer_size)
     }
     offset += deserialize_array<double, 4>(buffer + offset, analog_outputs);
 
+    if (offset != get_serialized_size()) {
+        std::cerr << "RobotCommand::deserialize: "
+            << "Serialized size ( " << offset
+            << " ) does not match expected size (" << get_serialized_size() << ")" << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -291,7 +333,7 @@ bool RobotCommandMessage::deserialize(uint8_t* buffer, size_t buffer_size)
 DiagnosticDataMessage::DiagnosticDataMessage() : Message()
 {
     // Initialize header
-    header.message_type = static_cast<uint16_t>(MessageType::DIAGNOSTIC_DATA);
+    header.message_type = static_cast<uint8_t>(MessageType::DIAGNOSTIC_DATA);
     header.payload_size = static_cast<uint16_t>(
         get_serialized_size() - FrameHeader::get_serialized_size());
     header.protocol_version = PROTOCOL_VERSION;
@@ -307,7 +349,7 @@ DiagnosticDataMessage::DiagnosticDataMessage() : Message()
     control_task_status = 0;
 }
 
-size_t DiagnosticDataMessage::message_size() { return 78; }
+size_t DiagnosticDataMessage::message_size() { return 74; }
 
 bool DiagnosticDataMessage::serialize(uint8_t* buffer, size_t buffer_size) const
 {
@@ -331,7 +373,7 @@ bool DiagnosticDataMessage::serialize(uint8_t* buffer, size_t buffer_size) const
             << "Header payload size does not match DiagnosticData size" << std::endl;
         return false;
     }
-    if (header.message_type != static_cast<uint16_t>(MessageType::DIAGNOSTIC_DATA)) {
+    if (header.message_type != static_cast<uint8_t>(MessageType::DIAGNOSTIC_DATA)) {
         std::cerr << "DiagnosticData::serialize: "
             << "Invalid message type: " << header.message_type << std::endl;
         return false;
@@ -379,7 +421,7 @@ bool DiagnosticDataMessage::deserialize(uint8_t* buffer, size_t buffer_size)
             << "Header payload size does not match DiagnosticData size" << std::endl;
         return false;
     }
-    if (header.message_type != static_cast<uint16_t>(MessageType::DIAGNOSTIC_DATA)) {
+    if (header.message_type != static_cast<uint8_t>(MessageType::DIAGNOSTIC_DATA)) {
         std::cerr << "DiagnosticData::deserialize: "
             << "Invalid message type: " << header.message_type << std::endl;
         return false;
@@ -413,6 +455,13 @@ bool DiagnosticDataMessage::deserialize(uint8_t* buffer, size_t buffer_size)
 
     // Deserialize control task status
     offset += deserialize_type(buffer + offset, control_task_status);
+
+    if (offset != get_serialized_size()) {
+        std::cerr << "DiagnosticData::deserialize: "
+            << "Serialized size ( " << offset
+            << " ) does not match expected size (" << get_serialized_size() << ")" << std::endl;
+        return false;
+    }
 
     return true;
 }

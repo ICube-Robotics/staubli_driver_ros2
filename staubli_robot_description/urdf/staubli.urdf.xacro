@@ -12,6 +12,7 @@
     <xacro:arg name="robot_model" default="???"/>
     <xacro:arg name="name" default="staubli"/>
     <xacro:arg name="robot_prefix" default=""/>
+    <xacro:arg name="robot_ip" default="0.0.0.0"/>
 
     <!-- Set the robot name using the property -->
     <xacro:attribute name="name" value="$(arg name)" />
@@ -68,9 +69,10 @@
 
     <!-- ROS2 control description -->
     <xacro:include filename="$(find staubli_robot_description)/r2c/staubli.r2c.xacro" />
-    <xacro:ur_ros2_control
+    <xacro:staubli_ros2_control
         name="$(arg name)"
         robot_prefix="$(arg robot_prefix)"
+        robot_ip="$(arg robot_ip)"
         robot_model_parameters_file="$(arg robot_model_parameters_file)"
         initial_positions_file="$(arg initial_positions_file)"
         use_mock_hardware="$(arg use_mock_hardware)"

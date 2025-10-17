@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<sio>
+  <serialPort>
+    <String name="name" value="portSerial" />
+    <Uint name="baudRate" value="9600" />
+    <Uint name="byteSize" value="8" />
+    <String name="parity" value="none" />
+    <Uint name="nbStopBit" value="1" />
+    <Int name="endOfString" value="13" />
+    <Float name="timeOut" value="5" />
+    <String name="flowControl" value="none" />
+  </serialPort>
+  <!-- Config UDP sockets -->
+  <udpSocket>
+    <String name="name" value="control" />
+    <String name="desc" value="Control socket to publish state and receive commands" />
+    <Inet name="connectIp" value="172.31.0.2" />
+    <Uint name="portNumber" value="56123" />
+    <Int name="endOfString" value="10" />
+    <Float name="timeOut" value="-0.001" />
+    <Bool name="broadcast" value="false" />
+    <Float name="quietTime" value="30" />
+  </udpSocket>
+  <udpSocket>
+    <String name="name" value="diag" />
+    <String name="desc" value="Diagnostic socket to publish diagnostic information" />
+    <Inet name="connectIp" value="172.31.0.2" />
+    <Uint name="portNumber" value="56124" />
+    <Int name="endOfString" value="10" />
+    <Float name="timeOut" value="-0.001" />
+    <Bool name="broadcast" value="false" />
+    <Float name="quietTime" value="30" />
+  </udpSocket>
+</sio>

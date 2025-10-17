@@ -47,6 +47,12 @@ public:
         uint16_t remote_port,
         uint16_t local_port) override;
 
+    bool connect(
+        const std::string& remote_address,
+        uint16_t remote_port,
+        const std::string& local_address,
+        uint16_t local_port) override;
+
     bool disconnect() override;
 
     bool is_connected() const override;

@@ -79,6 +79,9 @@ public:
     }
 
 public:
+    // Sequence delay
+    uint16_t sequence_delay = 0;
+
     // Robot operation mode
     OperationMode operation_mode = OperationMode::UNKNOWN;
 
@@ -148,6 +151,9 @@ public:
 public:
     // Command type (position, velocity, torque)
     CommandType command_type = CommandType::STOP;
+
+    // Controller period in milliseconds
+    double controller_period = -1.0;
 
     /**
      * @brief Command reference for the robot

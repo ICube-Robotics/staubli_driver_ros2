@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="decodeHeader">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_header" type="MessageHeader" xsi:type="element" use="reference" />
+      <Parameter name="x_nData" type="num" xsi:type="array" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+    </Parameters>
+    <Locals>
+      <Local name="l_nIndexOffset" type="num" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  // Copyright 2025 ICUBE Laboratory, University of Strasbourg
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //     http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+
+  if (size(x_nData) < x_header.nHeaderSize)
+    x_bError = true
+    logMsg("ros2_server::decodeHeader : Error, data buffer too small",2)
+    return
+  endIf
+
+  // Serialization
+  // uint8_t   <-> "1" Unsigned byte
+  // uint16_t  <-> "2l" Unsigned word, little endian
+  // float32_t <-> "4.0l" Single precision floating point value, little endian
+
+  l_nIndexOffset = 0
+  fromBinary(x_nData[l_nIndexOffset],2,"2l", x_header.nMagicNumber)
+  l_nIndexOffset = l_nIndexOffset + 2
+  fromBinary(x_nData[l_nIndexOffset],1,"1",x_header.nProtocolVersion)
+  l_nIndexOffset = l_nIndexOffset + 1
+  fromBinary(x_nData[l_nIndexOffset],1, "1",x_header.nMsgType)
+  l_nIndexOffset = l_nIndexOffset + 1
+  fromBinary(x_nData[l_nIndexOffset],2,"2l",x_header.nMsgSequenceNumber)
+  l_nIndexOffset = l_nIndexOffset + 2
+  // We don't really need this one, but let's decode it anyway
+  fromBinary(x_nData[l_nIndexOffset],2,"2l",x_header.nPayloadSize)
+  l_nIndexOffset = l_nIndexOffset + 2
+
+  if(l_nIndexOffset != x_header.nHeaderSize)
+    x_bError = true
+    logMsg("ros2_server::decodeHeader : Error, binary decoding failed",2)
+  else
+    x_bError = false
+  endIf
+
+  // Check magic number
+  if(x_header.nMagicNumber != 43981)
+    x_bError = true
+    logMsg("ros2_server::decodeHeader : Error, unexpected magic number",2)
+  endIf
+
+  // Check protocol version
+  if(x_header.nProtocolVersion != 1)
+    x_bError = true
+    logMsg("ros2_server::decodeHeader : Error, unexpected protocol version",2)
+  endIf
+
+end]]></Code>
+  </Program>
+</Programs>

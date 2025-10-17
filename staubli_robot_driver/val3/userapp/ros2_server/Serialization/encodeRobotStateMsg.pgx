@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="encodeRobotStateMsg">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_msg" type="RobotStateMsg" xsi:type="element" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+    </Parameters>
+    <Locals>
+      <Local name="l_nIndexOffset" type="num" xsi:type="array" size="1" />
+      <Local name="l_nStatusFlags" type="num" xsi:type="array" size="1" />
+      <Local name="l_nValidFieldFlags" type="num" xsi:type="array" size="1" />
+      <Local name="l_nDigitalInputFlags" type="num" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  // Copyright 2025 ICUBE Laboratory, University of Strasbourg
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //     http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+
+  // Check message is valid (basic checks)
+  if(x_msg.bIsInitialized == false)
+    x_bError = true
+    logMsg("ros2_server::encodeRobotStateMsg : Error, msg not initialized",2)
+    return
+  endIf
+
+  if(x_msg.header.nMsgType != 1)
+    x_bError = true
+    logMsg("ros2_server::encodeRobotStateMsg : Error, invalid msg type",2)
+    return
+  endIf
+
+  if(x_msg.header.nHeaderSize == 1)
+    x_bError = true
+    logMsg("ros2_server::encodeRobotStateMsg : header size is 1 (probably not initialized!)",3)
+    return
+  endIf
+  
+  if(size(x_msg.nSerializedData) != (x_msg.header.nPayloadSize + x_msg.header.nHeaderSize))
+    x_bError = true
+    logMsg("ros2_server::encodeRobotStateMsg : Error, invalid payload size",2)
+    return
+  endIf
+
+  // Encode header
+  call encodeHeader(x_msg.header, x_msg.nSerializedData, x_bError)
+  
+  if(x_bError == true)
+    logMsg("ros2_server::encodeRobotStateMsg : Error, failed to encode header",2)
+    return
+  endIf
+
+  // Generate flag bitmasks (uint16_t)
+  // TODO
+  l_nStatusFlags = 0
+  l_nValidFieldFlags = 0
+  l_nDigitalInputFlags = 0
+  
+  // Serialization
+  // uint8_t   <-> "1" Unsigned byte
+  // uint16_t  <-> "2l" Unsigned word, little endian
+  // float32_t <-> "4.0l" Single precision floating point value, little endian
+  
+  // We start writing after the header
+  l_nIndexOffset = x_msg.header.nHeaderSize
+  toBinary(x_msg.robotState.nSequenceDelay, 2, "2l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 2
+  toBinary(x_msg.robotState.nRobotMode ,1,"1",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 1
+  toBinary(l_nStatusFlags,2,"2l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 2
+  toBinary(l_nValidFieldFlags,2,"2l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 2
+  // Joint positions
+  toBinary(x_msg.robotState.jointPositions.j1, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointPositions.j2, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointPositions.j3, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointPositions.j4, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointPositions.j5, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointPositions.j6, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // Joint Velocities
+  toBinary(x_msg.robotState.jointVelocities.j1, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointVelocities.j2, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointVelocities.j3, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointVelocities.j4, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointVelocities.j5, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointVelocities.j6, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // Joint Torques (opt.)
+  toBinary(x_msg.robotState.jointTorques.j1, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointTorques.j2, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointTorques.j3, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointTorques.j4, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointTorques.j5, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.jointTorques.j6, 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // FT sensor(opt.)
+  toBinary(x_msg.robotState.nFtSensorValues[0], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.nFtSensorValues[1], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  toBinary(x_msg.robotState.nFtSensorValues[2], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // toBinary(x_msg.robotState.nFtSensorValues[3], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4  
+  // toBinary(x_msg.robotState.nFtSensorValues[4], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // toBinary(x_msg.robotState.nFtSensorValues[5], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // Digital Inputs
+  // toBinary(l_nDigitalInputFlags,2,"2l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 2
+  // Analog Inputs
+  // TODO
+  // toBinary(x_msg.robotState.nAnalogInputs[0], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // toBinary(x_msg.robotState.nAnalogInputs[1], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // toBinary(x_msg.robotState.nAnalogInputs[2], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // toBinary(x_msg.robotState.nAnalogInputs[3], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 4
+  
+  if(l_nIndexOffset != size(x_msg.nSerializedData) )
+    x_bError = true
+    logMsg("ros2_server::encodeRobotStateMsg : Error, binary encoding failed",2)
+    return
+  endIf
+  
+  // OK
+  x_bError = false
+end]]></Code>
+  </Program>
+</Programs>

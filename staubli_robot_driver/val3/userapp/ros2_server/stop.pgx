@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="stop">
+    <Code><![CDATA[begin
+  logMsg("ros2_server::stop : quitting application")
+  // Stop motion
+  stopMove()
+  resetMotion()
+  // Clear socket buffers
+  clearBuffer(siSocketControl)
+end]]></Code>
+  </Program>
+</Programs>

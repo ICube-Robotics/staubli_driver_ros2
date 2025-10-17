@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Database xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Data/2">
+  <Datas>
+    <Data name="bIsValid" access="public" xsi:type="array" type="bool" size="1">
+      <Value key="0" value="false" />
+    </Data>
+
+    <!-- Control mode -->
+    <Data name="nMode" access="public" xsi:type="array" type="num" size="1" />
+
+    <!-- Supervision data -->
+    <Data name="nRemoteCtrlPeriod" access="public" xsi:type="array" type="num" size="1" />
+
+    <!-- Motion command -->
+    <Data name="nMotionCmdType" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nMotionCmdData" access="public" xsi:type="array" type="num" size="6" />
+
+    <!-- IOs -->
+    <Data name="nDigitalOutputs" access="public" xsi:type="array" type="bool" size="16" />
+    <Data name="nAnalogOutputs" access="public" xsi:type="array" type="num" size="4" />
+  </Datas>
+</Database>

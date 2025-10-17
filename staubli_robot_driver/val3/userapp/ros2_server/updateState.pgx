@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="updateState" access="public">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_state" type="RobotState" xsi:type="element" use="reference" />
+    </Parameters>
+    <Locals>
+      <Local name="l_nJntVelArray" type="num" xsi:type="array" size="6" />
+      <Local name="l_nJntTorqueArray" type="num" xsi:type="array" size="6" />
+      <Local name="l_nEStopStatus" type="num" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  // Read the robot state and fill the RobotState structure
+  // Sets "x_state.bIsValid" to true if successful, false otherwise
+  // Note that some fields should be filled by the caller:
+  // - bInError
+  // - nSequenceDelay
+  // - nControlMode (Stop / Position / Velocity / etc. )
+  x_state.bIsValid = false
+
+  // -------------------------
+  // Fill status fields
+  // -------------------------
+  // Power and motion
+  x_state.bDrivePowered = isPowered()
+  x_state.bBrakeReleased = x_state.bDrivePowered
+  x_state.bInMotion = !isSettled()
+
+  // Safety
+  // Estop status:
+  //  - 0 No safety stop
+  //  - 1 Waiting safety Restart
+  //  - 2 SS1 - Safety stop condition
+  //  - 3 SS2 - Safe operating stop condition
+  //  - 4 Waiting restart from WMS
+  l_nEStopStatus = esStatus()
+  x_state.bEStopped = (l_nEStopStatus != 0)
+  x_state.bWaitAck = (l_nEStopStatus == 1)
+
+
+  // Robot working mode
+  //   0: Invalid / Transition from safety
+  //   1: Manual
+  //   2: Test
+  //   3: Automatic - Local
+  //   4: Automatic - Remote
+  // The returned status depends on the mode...
+  // For automatic modes (3 and 4), status is:
+  //   0 : Move (programmed movement)
+  //   1 : Move (connection movement)
+  //   2 : Hold
+  x_state.nRobotMode = workingMode(x_state.nRobotStatus)
+
+  // Motion possible
+  x_state.bMotionPossible = (x_state.bDrivePowered and (!x_state.bEStopped))
+  // x_state.bMotionPossible = (x_state.bDrivePowered and (!x_state.bEStopped) and (x_state.nRobotStatus == 0))
+
+  // -------------------------
+  // Fill joint state
+  // -------------------------
+  x_state.bValidPosition = true
+  x_state.bValidVelocity = true
+  x_state.bValidTorque = true
+
+  // Get the current joint positions
+  x_state.jointPositions = herej()
+
+  // Get the current joint velocities (approximation)
+  $getJntSpeedCmd(l_nJntVelArray)
+  x_state.jointVelocities.j1 = l_nJntVelArray[0]
+  x_state.jointVelocities.j2 = l_nJntVelArray[1]
+  x_state.jointVelocities.j3 = l_nJntVelArray[2]
+  x_state.jointVelocities.j4 = l_nJntVelArray[3]
+  x_state.jointVelocities.j5 = l_nJntVelArray[4]
+  x_state.jointVelocities.j6 = l_nJntVelArray[5]
+
+  // Get the estimated joint torques
+  // Note: current joint torque (N.m for revolute axis) or force (N for linear axis) computed from the motors currents.
+  // The joint force is not a direct estimation of external efforts. It also includes gravity, friction, viscosity,
+  // inertia, noise and accuracy of current sensors, relation between motor current and torque.
+  // It returns only an order of magnitude for forces.
+  // There is NO COMMITMENT ON ACCURACY!
+  getJointForce(l_nJntTorqueArray)
+  x_state.jointTorques.j1 = l_nJntTorqueArray[0]
+  x_state.jointTorques.j2 = l_nJntTorqueArray[1]
+  x_state.jointTorques.j3 = l_nJntTorqueArray[2]
+  x_state.jointTorques.j4 = l_nJntTorqueArray[3]
+  x_state.jointTorques.j5 = l_nJntTorqueArray[4]
+  x_state.jointTorques.j6 = l_nJntTorqueArray[5]
+
+  // -------------------------
+  // Fill F/T sensor data (opt.)
+  // -------------------------
+  // Not implemented
+  x_state.bValidFtSensor = false
+  x_state.nFtSensorValues[0] = 0.0
+  x_state.nFtSensorValues[1] = 0.0
+  x_state.nFtSensorValues[2] = 0.0
+  x_state.nFtSensorValues[3] = 0.0
+  x_state.nFtSensorValues[4] = 0.0
+  x_state.nFtSensorValues[5] = 0.0
+
+  // -------------------------
+  // Fill IOs state
+  // -------------------------
+  x_state.bValidDigitalInputs = false
+  x_state.bValidAnalogInputs = false
+
+  // -------------------------
+  x_state.bIsValid = true
+end]]></Code>
+  </Program>
+</Programs>

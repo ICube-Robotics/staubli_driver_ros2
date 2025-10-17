@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="computeSequenceDelay">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="nLastSequenceSent" type="num" xsi:type="element" />
+      <Parameter name="nLastSequenceReceived" type="num" xsi:type="element" />
+      <Parameter name="x_nSequenceDelay" type="num" xsi:type="element" use="reference"/>
+    </Parameters>
+    <Code><![CDATA[begin
+    x_nSequenceDelay = nLastSequenceSent - nLastSequenceReceived
+    // If negative, it means we wrapped around or that there is an error
+    if (x_nSequenceDelay < -60000 and x_nSequenceDelay < 0)
+      // Wrap around (uint16_t)
+      x_nSequenceDelay = x_nSequenceDelay + 65536
+    endIf
+end]]></Code>
+  </Program>
+</Programs>

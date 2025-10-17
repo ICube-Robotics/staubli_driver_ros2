@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="decodeRobotCommandMsg">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_msg" type="RobotCommandMsg" xsi:type="element" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+    </Parameters>
+    <Locals>
+      <Local name="l_nIndexOffset" type="num" xsi:type="array" size="1" />
+      <Local name="l_nDigitalOutputCmdMask" type="num" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  // Copyright 2025 ICUBE Laboratory, University of Strasbourg
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //     http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+
+  // Check data buffer size is consistent
+  if(size(x_msg.nSerializedData) != x_msg.header.nHeaderSize + x_msg.header.nPayloadSize)
+    x_bError = true
+    logMsg("ros2_server::decodeRobotCommandMsg : Error, inconsistent data size",2)
+  endIf
+
+  // Decode header
+  call decodeHeader(x_msg.header, x_msg.nSerializedData, x_bError)
+  if(x_bError)
+    logMsg("ros2_server::decodeRobotCommandMsg : Error, failed to decode header",2)
+  endIf
+
+  // Check message type is indeed RobotCommand
+  if(x_msg.header.nMsgType != 2)
+    x_bError = true
+    logMsg("ros2_server::decodeRobotCommandMsg : Error, unexpected message type",2)
+  endIf
+
+  // Just to be sure, set command mode to STOP...
+  if (x_bError)
+    x_msg.robotCommand.nMotionCmdType=1
+    return
+  endIf
+
+  // Deserialization
+  // uint8_t   <-> "1" Unsigned byte
+  // uint16_t  <-> "2l" Unsigned word, little endian
+  // float32_t <-> "4.0l" Single precision floating point value, little endian
+
+  // We start writing after the header
+  l_nIndexOffset = x_msg.header.nHeaderSize
+  // Remote control period
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],1,"4.0l", x_msg.robotCommand.nRemoteCtrlPeriod)
+  l_nIndexOffset = l_nIndexOffset + 4
+  // Motion command type
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],1,"1", x_msg.robotCommand.nMotionCmdType)
+  l_nIndexOffset = l_nIndexOffset + 1
+  // Motion command data (6 floats)
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nMotionCmdData[0])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nMotionCmdData[1])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nMotionCmdData[2])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nMotionCmdData[3])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nMotionCmdData[4])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nMotionCmdData[5])
+  l_nIndexOffset = l_nIndexOffset + 4
+  // Digital output command mask
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],2,"2l", l_nDigitalOutputCmdMask)
+  l_nIndexOffset = l_nIndexOffset + 2
+  // Analog output commands (4 floats)
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nAnalogOutputs[0])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nAnalogOutputs[1])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nAnalogOutputs[2])
+  l_nIndexOffset = l_nIndexOffset + 4
+  fromBinary(x_msg.nSerializedData[l_nIndexOffset],4,"4.0l", x_msg.robotCommand.nAnalogOutputs[3])
+  l_nIndexOffset = l_nIndexOffset + 4
+
+  // Check all OK
+  if(l_nIndexOffset != size(x_msg.nSerializedData))
+    logMsg("ros2_server::decodeRobotCommandMsg : Error, binary decoding failed",2)
+    x_bError = true
+    // Invalidate command, since we don't know what we just read
+    x_msg.robotCommand.bIsValid = false
+    // Set motion command type to STOP, just to be sure
+    x_msg.robotCommand.nMotionCmdType = 1
+    return
+  endIf
+
+  // Transform digital output command mask to boolean array
+  // for i = 0 to 5
+  //   x_msg.robotCommand.nDigitalOutput[i] = (l_nDigitalOutputCmdMask and (1 << i)) != 0
+  // endFor
+
+  // OK, mark command message as valid
+  x_msg.robotCommand.bIsValid = true
+  x_bError = false
+end]]></Code>
+  </Program>
+</Programs>

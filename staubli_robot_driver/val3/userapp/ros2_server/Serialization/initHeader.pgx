@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="initHeader">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_header" type="MessageHeader" xsi:type="element" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+    </Parameters>
+    <Code><![CDATA[begin
+  // Copyright 2025 ICUBE Laboratory, University of Strasbourg
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //     http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  // Header serialized size is 8 bytes
+  x_header.nHeaderSize = 8
+
+  // Set magic number (0xABCD) and protocol version
+  x_header.nMagicNumber = 43981
+  x_header.nProtocolVersion = 1
+
+  // Initialize other fields to default values
+  // Should be overwritten by message specialization init
+  x_header.nMsgType = 0
+  x_header.nMsgSequenceNumber = 0
+
+  x_bError = false
+
+end]]></Code>
+  </Program>
+</Programs>

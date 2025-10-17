@@ -176,6 +176,7 @@ TEST_F(MessageSerializationTest, RobotCommandMessageSerializationDeserialization
   original_msg.header.sequence_number = 99;
 
   // Set command fields
+  original_msg.controller_period = 0.008;  // 8 ms
   original_msg.command_type = CommandType::JOINT_POSITION;
   original_msg.command_reference = {1.1, 2.2, 3.3, 4.4, 5.5, 6.6};
 
@@ -202,6 +203,7 @@ TEST_F(MessageSerializationTest, RobotCommandMessageSerializationDeserialization
   EXPECT_EQ(original_msg.header.message_type, deserialized_msg.header.message_type);
 
   // Verify command fields
+  EXPECT_NEAR(original_msg.controller_period, deserialized_msg.controller_period, 1e-5);
   EXPECT_EQ(original_msg.command_type, deserialized_msg.command_type);
 
   // Verify command reference

@@ -30,12 +30,12 @@ namespace staubli_robot_driver {
 /**
  * @brief Magic number to identify the protocol
  */
-constexpr uint32_t MAGIC_NUMBER = 0xABCD1234;
+constexpr uint16_t MAGIC_NUMBER = 0xABCD;
 
 /**
  * @brief Protocol version
  */
-constexpr uint16_t PROTOCOL_VERSION = 1;
+constexpr uint8_t PROTOCOL_VERSION = 1;
 
 /**
  * @brief Default port for the control socket
@@ -56,11 +56,11 @@ constexpr size_t MAX_FRAME_SEQUENCE_NUMBER = std::numeric_limits<uint16_t>::max(
 /**
  * @brief Message types for communication
  */
-enum class MessageType : uint16_t {
-    INVALID = 0x0000,
-    ROBOT_STATE = 0x0001,
-    ROBOT_COMMAND = 0x0002,
-    DIAGNOSTIC_DATA = 0x0003
+enum class MessageType : uint8_t {
+    INVALID = 0x00,
+    ROBOT_STATE = 0x01,
+    ROBOT_COMMAND = 0x02,
+    DIAGNOSTIC_DATA = 0x03
 };
 
 /**
@@ -115,11 +115,11 @@ enum class ValidFieldFlag : uint16_t {
  */
 struct FrameHeader {
     /// Magic number for identifying the protocol
-    uint32_t magic_number = MAGIC_NUMBER;
+    uint16_t magic_number = MAGIC_NUMBER;
     /// Protocol version (should be PROTOCOL_VERSION)
-    uint16_t protocol_version = PROTOCOL_VERSION;
+    uint8_t protocol_version = PROTOCOL_VERSION;
     /// Type of message
-    uint16_t message_type = static_cast<uint16_t>(MessageType::INVALID);
+    uint8_t message_type = static_cast<uint8_t>(MessageType::INVALID);
     /// Sequence number for tracking messages
     uint16_t sequence_number = 0;
     /// Size of the payload in bytes
@@ -132,7 +132,7 @@ struct FrameHeader {
     bool deserialize(uint8_t* buffer, size_t buffer_size);
 
     /// Size of the header in bytes
-    static size_t get_serialized_size() { return 12; }
+    static size_t get_serialized_size() { return 8; }
 };
 
 /**
@@ -144,16 +144,16 @@ struct FrameHeader {
  *   ______________________________
  *  |            |                 |
  *  |   Header   |     Payload     |
- *  | (16 bytes) | (variable size) |
+ *  | (8 bytes)  | (variable size) |
  *  |____________|_________________|
  *
- * Header format (16 bytes):
- *  - Magic number (4 bytes, uint32_t)
- *  - Protocol version (2 bytes, uint16_t)
- *  - Message type (2 bytes, uint16_t)
- *      * ROBOT_STATE = 0x0001
- *      * ROBOT_COMMAND = 0x0002
- *      * DIAGNOSTIC_DATA = 0x0003
+ * Header format (8 bytes):
+ *  - Magic number (2 bytes, uint16_t)
+ *  - Protocol version (1 bytes, uint8_t)
+ *  - Message type (1 bytes, uint8_t)
+ *      * ROBOT_STATE = 0x01
+ *      * ROBOT_COMMAND = 0x02
+ *      * DIAGNOSTIC_DATA = 0x03
  *  - Sequence number (2 bytes, uint16_t)
  *  - Payload size (2 bytes, uint16_t)
  */

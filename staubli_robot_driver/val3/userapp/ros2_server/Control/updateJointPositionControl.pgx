@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="updateJointPositionControl">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_robotState" type="RobotState" xsi:type="element" use="reference" />
+      <Parameter name="x_robotCommand" type="RobotCommand" xsi:type="element" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+      <Parameter name="b_isFirstCall" type="bool" xsi:type="element" />
+    </Parameters>
+    <Locals>
+      <Local name="l_nMovejSyncState" type="num" xsi:type="array" size="1" />
+     <Local name="l_jJointPositionCmd" type="jointRx" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  // Copyright 2025 ICUBE Laboratory, University of Strasbourg
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //     http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+
+  // Update moveJsync status
+  // -2 movejSync stopped in error (after invalid command)
+  // -1 movejSync not started
+  // 0  movejSync running, no error
+  // 1  movejSync running, last command was not refreshed in time
+  // 2  movejSync running, commands are locked because motion is stopped (eStop, moveHold, stopMove())
+
+  l_nMovejSyncState = $movejSyncState()
+
+  if (!x_robotState.bMotionPossible)
+      logMsg("ros2_server::jointPositionControl : motion not possible, aborting...", 2)
+      if (l_nMovejSyncState != -1)
+        logMsg("ros2_server::jointPositionControl : stopping movejSync because motion not possible", 1)
+        call stopJointPositionControl(x_bError)
+      endIf
+      x_bError = true
+      return
+  endIf
+
+  // Check command is valid
+  if (!x_robotCommand.bIsValid)
+      logMsg("ros2_server::jointPositionControl : invalid command, aborting...", 2)
+      if (l_nMovejSyncState != -1)
+        logMsg("ros2_server::jointPositionControl : stopping movejSync because command is invalid", 1)
+        call stopJointPositionControl(x_bError)
+      endIf
+      x_bError = true
+      return
+  endIf
+
+  if (x_robotCommand.nMotionCmdType != 2)
+      logMsg("ros2_server::jointPositionControl : unexpected command type, aborting...", 2)
+      call stopJointPositionControl(x_bError)
+      x_bError = true
+      return
+  endIf
+
+  // First call: start moveJsync if not already started
+  if(b_isFirstCall == true)
+    resetMotion()
+    if(l_nMovejSyncState == -1)
+      logMsg("ros2_server::jointPositionControl : Starting movejSync", 1)
+      $movejSyncBegin(mMdesc)
+    else
+      logMsg("ros2_server::jointPositionControl : movejSync already started, aborting...", 2)
+      call stopJointPositionControl(x_bError)
+      x_bError = true
+      return
+    endIf
+  endIf
+
+  // Joint position control
+  l_jJointPositionCmd.j1 = x_robotCommand.nMotionCmdData[0]
+  l_jJointPositionCmd.j2 = x_robotCommand.nMotionCmdData[1]
+  l_jJointPositionCmd.j3 = x_robotCommand.nMotionCmdData[2]
+  l_jJointPositionCmd.j4 = x_robotCommand.nMotionCmdData[3]
+  l_jJointPositionCmd.j5 = x_robotCommand.nMotionCmdData[4]
+  l_jJointPositionCmd.j6 = x_robotCommand.nMotionCmdData[5]
+
+  // logMsg("Current joint positions: " + toString("0.2", x_robotState.jointPositions.j1) + ", " + toString("0.2", x_robotState.jointPositions.j2) + ", " + toString("0.2", x_robotState.jointPositions.j3) + ", " + toString("0.2", x_robotState.jointPositions.j4) + ", " + toString("0.2", x_robotState.jointPositions.j5) + ", " + toString("0.2", x_robotState.jointPositions.j6), 1)
+  // logMsg("Commanding joint positions: " + toString("0.2", l_jJointPositionCmd.j1) + ", " + toString("0.2", l_jJointPositionCmd.j2) + ", " + toString("0.2", l_jJointPositionCmd.j3) + ", " + toString("0.2", l_jJointPositionCmd.j4) + ", " + toString("0.2", l_jJointPositionCmd.j5) + ", " + toString("0.2", l_jJointPositionCmd.j6), 1)
+
+  // Check position limits
+  if (!isInRange(l_jJointPositionCmd))
+    logMsg("ros2_server::jointPositionControl : error, command exceeds joint position limits", 3)
+    call stopJointPositionControl(x_bError)
+    x_bError = true
+    return
+  endIf
+
+  // Check target is close enough to current position
+  // TODO
+
+  // Update moveJsync
+  $movejSync(l_jJointPositionCmd)
+
+  // Check moveJsync status
+  l_nMovejSyncState = $movejSyncState()
+
+  x_bError = false
+  if (l_nMovejSyncState == -2)
+    logMsg("ros2_server::jointPositionControl : movejSync in error state, stopping controller", 3)
+    call stopJointPositionControl(x_bError)
+    x_bError = true
+    return
+  elseIf (l_nMovejSyncState == 1)
+    // logMsg("ros2_server::jointPositionControl : Warning, last command was not refreshed in time", 2)
+  elseIf (l_nMovejSyncState == 2)
+    // logMsg("ros2_server::jointPositionControl : error, commands are locked because motion is stopped (mode=" + toString("0.3", x_robotState.nRobotMode) + ", status=" + toString("0.3", x_robotState.nRobotStatus) + ")", 2)
+    // x_bError = true
+  endIf
+
+end]]></Code>
+  </Program>
+</Programs>

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="resetControlSocket">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_UdpSocket" type="sio" xsi:type="element" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+    </Parameters>
+    <Code><![CDATA[begin
+  // Non-blocking socket
+  sioCtrl(x_UdpSocket, "timeout", -1)
+  // Linux EoL ('\n')
+  sioCtrl(x_UdpSocket, "endOfString", 10)
+  // Clear buffer
+  clearBuffer(x_UdpSocket)
+  
+  x_bError = false
+end]]></Code>
+  </Program>
+</Programs>

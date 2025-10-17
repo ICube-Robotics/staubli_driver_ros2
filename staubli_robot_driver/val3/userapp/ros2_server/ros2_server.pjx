@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://www.staubli.com/robotics/VAL3/Project/3">
+  <Parameters version="s8.20.2Cs9_BS4270" stackSize="5000" millimeterUnit="true" />
+  <Programs>
+    <Program file="Comm/computeSequenceDelay.pgx" />
+    <Program file="Comm/getNextSequenceNumber.pgx" />
+    <Program file="Comm/readData.pgx" />
+    <Program file="Comm/resetControlSocket.pgx" />
+    <Program file="Comm/sendData.pgx" />
+    <Program file="Control/stopJointPositionControl.pgx" />
+    <Program file="Control/stopJointVelocityControl.pgx" />
+    <Program file="Control/updateJointPositionControl.pgx" />
+    <Program file="Control/updateJointVelocityControl.pgx" />
+    <Program file="controlTask.pgx" />
+    <Program file="Serialization/decodeHeader.pgx" />
+    <Program file="Serialization/decodeRobotCommandMsg.pgx" />
+    <Program file="Serialization/encodeHeader.pgx" />
+    <Program file="Serialization/encodeRobotStateMsg.pgx" />
+    <Program file="Serialization/initHeader.pgx" />
+    <Program file="Serialization/initRobotCommandMsg.pgx" />
+    <Program file="Serialization/initRobotStateMsg.pgx" />
+    <Program file="start.pgx" />
+    <Program file="stop.pgx" />
+    <Program file="updateState.pgx" />
+  </Programs>
+  <Database>
+    <Data file="ros2_server.dtx" />
+  </Database>
+  <Libraries />
+  <Types>
+    <Type name="MessageHeader" path="Disk://ros2_server/Types/MessageHeader/MessageHeader.pjx" />
+    <Type name="RobotState" path="Disk://ros2_server/Types/RobotState/RobotState.pjx" />
+    <Type name="RobotStateMsg" path="Disk://ros2_server/Types/RobotStateMsg/RobotStateMsg.pjx" />
+    <Type name="RobotCommand" path="Disk://ros2_server/Types/RobotCommand/RobotCommand.pjx" />
+    <Type name="RobotCommandMsg" path="Disk://ros2_server/Types/RobotCommandMsg/RobotCommandMsg.pjx" />
+  </Types>
+</Project>

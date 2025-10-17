@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="start">
+    <Locals>
+      <Local name="l_sVal3" type="string" xsi:type="array" size="1" />
+      <Local name="l_sMajor" type="string" xsi:type="array" size="1" />
+      <Local name="l_nCtrlPeriod" type="num" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  logMsg("ros2_server::start : starting application")
+
+  // Get VAL3 version
+  l_sVal3=getVersion("System")
+  l_sMajor=mid(l_sVal3,1,1)
+
+  // Speed must be at 100%
+  if getMonitorSpeed()<100
+    popUpMsg("The monitor speed must be at 100%, waiting...")
+    wait(getMonitorSpeed() == 100)
+  endIf
+
+  // Reset socket buffers
+  clearBuffer(siSocketControl)
+
+  // Setup supervision/diagnostics task
+  // TODO
+
+  // Setup control task
+  l_nCtrlPeriod = 0.004
+  mMdesc.blend = off
+
+  stopMove()
+  resetMotion()
+  autoConnectMove(true)
+
+  // Start control task
+  bIsOverrun = false
+  taskCreateSync "controlTask", l_nCtrlPeriod, bIsOverrun, controlTask()
+end]]></Code>
+  </Program>
+</Programs>

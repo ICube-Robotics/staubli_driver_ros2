@@ -43,7 +43,8 @@ public:
     UDPSocketImpl();
     ~UDPSocketImpl();
 
-    bool connect(const std::string& remote_address, uint16_t remote_port, uint16_t local_port);
+    bool connect(const std::string& remote_address, uint16_t remote_port,
+                 const std::string& local_address, uint16_t local_port);
     bool disconnect();
     bool is_connected() const;
     bool send(std::vector<uint8_t>& data);
@@ -101,10 +102,11 @@ UDPSocketImpl::~UDPSocketImpl() {
 bool UDPSocketImpl::connect(
     const std::string& remote_address,
     uint16_t remote_port,
+    const std::string& local_address,
     uint16_t local_port)
 {
-    RCLCPP_INFO(logger_, "Connecting UDP socket to %s:%d from local port %d...",
-        remote_address.c_str(), remote_port, local_port);
+    RCLCPP_INFO(logger_, "Connecting UDP socket to %s:%d from %s:%d...",
+        remote_address.c_str(), remote_port, local_address.c_str(), local_port);
     // If already connected, disconnect first
     if (is_connected()) {
         RCLCPP_WARN(logger_, "UDP socket is already connected. Disconnecting...");
@@ -112,23 +114,46 @@ bool UDPSocketImpl::connect(
             return false;
         }
     }
-    try {
-        // Create local endpoint
-        local_endpoint_ = boost::asio::ip::udp::endpoint(
-            boost::asio::ip::udp::v4(), local_port);
 
-        // Open and bind the socket
+    try {
+        // Open the socket
         socket_.open(boost::asio::ip::udp::v4());
+
+        // Set socket options for better reusability
+        socket_.set_option(boost::asio::socket_base::reuse_address(true));
+
+        // Create local endpoint with specified IP address
+        boost::asio::ip::address local_addr;
+        if (local_address == "0.0.0.0" || local_address.empty()) {
+            // Bind to all interfaces
+            local_addr = boost::asio::ip::address_v4::any();
+        } else {
+            // Bind to specific interface
+            local_addr = boost::asio::ip::address::from_string(local_address);
+        }
+
+        local_endpoint_ = boost::asio::ip::udp::endpoint(local_addr, local_port);
         socket_.bind(local_endpoint_);
+
+        // Update local_endpoint_ with the actual bound port
+        local_endpoint_ = socket_.local_endpoint();
+
+        RCLCPP_DEBUG(logger_, "UDP socket bound to local address %s:%d",
+                   local_endpoint_.address().to_string().c_str(), local_endpoint_.port());
 
         // Resolve remote endpoint
         boost::asio::ip::udp::resolver resolver(io_service_);
         boost::asio::ip::udp::resolver::query query(
             boost::asio::ip::udp::v4(), remote_address, std::to_string(remote_port));
         remote_endpoint_ = *resolver.resolve(query);
+        RCLCPP_DEBUG(logger_, "UDP socket will send to %s:%d",
+                   remote_address.c_str(), remote_port);
     }
     catch (const std::exception& e) {
         RCLCPP_ERROR(logger_, "Error connecting UDP socket: %s", e.what());
+        if (socket_.is_open()) {
+            socket_.close();
+        }
         is_connected_.store(false);
         return false;
     }

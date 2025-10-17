@@ -23,8 +23,13 @@
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/types/hardware_component_interface_params.hpp"
 
 #include "rclcpp_lifecycle/state.hpp"
+
+#include "staubli_robot_driver/robot_driver.hpp"
+#include "staubli_robot_driver/communication/messages.hpp"
+#include "staubli_robot_driver/communication/protocol.hpp"
 
 namespace staubli_robot_driver {
 
@@ -35,7 +40,7 @@ public:
     ~StaubliHardwareInterface();
 
     hardware_interface::CallbackReturn
-    on_init(const hardware_interface::HardwareInfo & info) override;
+    on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
     hardware_interface::CallbackReturn
     on_configure(const rclcpp_lifecycle::State& previous_state) final;
@@ -66,15 +71,38 @@ public:
     hardware_interface::return_type
     perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
         const std::vector<std::string>& stop_interfaces) final;
+
 private:
-    // Robot driver
+    /// Update the internal state from the robot driver
+    bool update_state(const RobotStateMessage& state_msg);
+
+private:
+    /// Robot driver instance
     std::shared_ptr<RobotDriver> robot_driver_;
 
-    // Joint state and command vectors
-    std::vector<double> hw_positions_;
-    std::vector<double> hw_velocities_;
-    std::vector<double> hw_efforts_;
-    std::vector<double> hw_commands_;
+    /// Enum defining the current control mode
+    CommandType current_control_mode_;
+
+    // Joint state
+    size_t num_joints_;  ///< Number of joints
+    std::vector<double> hw_joint_positions_;  ///< Current joint positions
+    std::vector<double> hw_joint_velocities_;  ///< Current joint velocities
+    std::vector<double> hw_joint_efforts_;  ///< Current joint efforts
+
+    // Joint commands
+    std::vector<double> hw_joint_position_commands_;  ///< Current joint position commands
+    std::vector<double> hw_joint_velocity_commands_;  ///< Current joint velocity commands
+    std::vector<double> hw_joint_effort_commands_;    ///< Current joint effort commands
+
+    // GPIO state
+    std::vector<double> hw_digital_inputs_;   ///< Current digital inputs
+    std::vector<double> hw_analog_inputs_;  ///< Current analog inputs
+    std::vector<double> hw_digital_outputs_;   ///< Current digital outputs
+    std::vector<double> hw_analog_outputs_;  ///< Current analog outputs
+
+    // GPIO command
+    std::vector<double> hw_digital_output_commands_;   ///< Current digital output commands
+    std::vector<double> hw_analog_output_commands_;  ///< Current analog output commands
 };
 
 }  // namespace staubli_robot_driver

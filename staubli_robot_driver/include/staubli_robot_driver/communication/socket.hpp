@@ -58,6 +58,18 @@ public:
         const std::string& remote_address, uint16_t remote_port, uint16_t local_port) = 0;
 
     /**
+     * @brief Connect to the remote endpoint with specific local address
+     * @param remote_address Address of the remote endpoint (format depends on protocol)
+     * @param remote_port Port or identifier for the remote endpoint
+     * @param local_address Local IP address to bind to (e.g., "192.168.1.100", "0.0.0.0" for any)
+     * @param local_port Port or identifier for the local endpoint
+     * @return True if connected successfully, false otherwise
+     */
+    virtual bool connect(
+        const std::string& remote_address, uint16_t remote_port,
+        const std::string& local_address, uint16_t local_port) = 0;
+
+    /**
      * @brief Disconnect from the remote endpoint
      * @return True if disconnected successfully, false otherwise
      */

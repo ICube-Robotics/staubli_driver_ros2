@@ -36,10 +36,16 @@ set(DEPENDENCIES
   geometry_msgs
   control_msgs
   realtime_tools
+  hardware_interface
+  pluginlib
+  rclcpp_lifecycle
 )
 foreach(DEPENDENCY ${DEPENDENCIES})
   find_package(${DEPENDENCY} REQUIRED)
 endforeach()
+
+# Backward ROS for stack traces
+find_package(backward_ros REQUIRED)
 
 # ASIO for networking and async sockets
 find_package(Boost REQUIRED COMPONENTS system)
@@ -56,10 +62,12 @@ set(LIBRARY_SOURCES
   src/real_time_socket_interface.cpp
   # Robot interface
   src/robot_driver.cpp
+  # Mock robot server for testing
+  src/mock_robot_server.cpp
 )
 
 # Main library
-add_library(${PROJECT_NAME} ${LIBRARY_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${LIBRARY_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -71,15 +79,28 @@ target_link_libraries(${PROJECT_NAME}
     Boost::system
 )
 
+# Hardware interface library
+add_library(${PROJECT_NAME}_hardware_interface SHARED
+  src/staubli_hardware_interface.cpp
+)
+target_include_directories(${PROJECT_NAME}_hardware_interface PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(${PROJECT_NAME}_hardware_interface ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME}_hardware_interface
+  ${PROJECT_NAME}
+)
+
 # Install headers
 install(
   DIRECTORY include/
   DESTINATION include
 )
 
-# Install library
+# Install libraries
 install(
-  TARGETS ${PROJECT_NAME}
+  TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_hardware_interface
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -127,6 +148,21 @@ if(BUILD_TESTING)
     test/unit_tests/communication/test_rt_socket_interface.cpp)
 
   add_unit_test(test_robot_driver test/unit_tests/test_robot_driver.cpp)
+
+  add_unit_test(test_mock_robot_server test/unit_tests/test_mock_robot_server.cpp)
+
+  # Add hardware interface test with additional dependencies
+  ament_add_gtest(test_staubli_hardware_interface
+    test/unit_tests/test_staubli_hardware_interface.cpp
+  )
+  target_include_directories(test_staubli_hardware_interface PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+  target_link_libraries(test_staubli_hardware_interface
+    ${PROJECT_NAME}
+    staubli_robot_driver_hardware_interface
+  )
 endif()
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
@@ -136,5 +172,29 @@ ament_export_dependencies(
   sensor_msgs
   geometry_msgs
   control_msgs
+  hardware_interface
+  pluginlib
+  rclcpp_lifecycle
 )
+
+# Simple message receiver executable (for testing VAL3 communication)
+add_executable(test_receive_robot_state
+  src/test_receive_robot_state.cpp
+)
+target_include_directories(test_receive_robot_state PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(test_receive_robot_state
+  ${PROJECT_NAME}
+)
+
+# Install the executable
+install(TARGETS test_receive_robot_state
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Export plugin
+pluginlib_export_plugin_description_file(hardware_interface staubli_hardware_interface.xml)
+
 ament_package()

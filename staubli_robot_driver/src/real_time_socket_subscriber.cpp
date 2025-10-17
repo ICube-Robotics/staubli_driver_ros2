@@ -89,7 +89,7 @@ void RealTimeSocketSubscriber<MessageType>::update_message(
 {
     MessageType msg;
     if (msg.deserialize(data.data(), bytes_transferred)) {
-        // Update the reception timestamp
+        // Update the reception timestamp and validity
         msg.reception_timestamp = rclcpp::Clock().now();
         // Acquire mutex and update the message buffer
         message_buffer_.set(msg);
@@ -107,9 +107,15 @@ bool RealTimeSocketSubscriber<MessageType>::read_message(MessageType& msg, Messa
     // Try to get the latest message from the buffer
     auto received_msg = message_buffer_.try_get();
     if (!received_msg.has_value()) {
+        status.new_message = false;
+    } else {
+        msg = received_msg.value();
+        status.new_message = true;
+    }
+    // If no new message and provided msg is empty, return false
+    if (!status.new_message && msg.reception_timestamp.nanoseconds() == 0) {
         return false;
     }
-    msg = received_msg.value();
 
     // Reset time since received (used to check staleness)
     status.time_since_received = rclcpp::Clock().now() - msg.reception_timestamp;

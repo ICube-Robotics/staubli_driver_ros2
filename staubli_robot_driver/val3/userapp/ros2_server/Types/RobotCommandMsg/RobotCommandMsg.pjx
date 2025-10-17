@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://www.staubli.com/robotics/VAL3/Project/3">
+  <Parameters version="s7.7.2" stackSize="5000" millimeterUnit="true" />
+  <Programs>
+    <Program file="start.pgx" />
+    <Program file="stop.pgx" />
+  </Programs>
+  <Database>
+    <Data file="RobotCommandMsg.dtx" />
+  </Database>
+  <Libraries />
+  <Types>
+    <Type name="MessageHeader" path="Disk://ros2_server/Types/MessageHeader/MessageHeader.pjx" />
+    <Type name="RobotCommand" path="Disk://ros2_server/Types/RobotCommand/RobotCommand.pjx" />
+  </Types>
+</Project>

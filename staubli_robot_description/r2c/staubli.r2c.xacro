@@ -5,9 +5,10 @@
     <xacro:include filename="$(find staubli_robot_description)/r2c/include/staubli_r2c_joints.xacro" />
     <xacro:include filename="$(find staubli_robot_description)/r2c/include/staubli_r2c_gpios.xacro" />
 
-    <xacro:macro name="ur_ros2_control" params="
+    <xacro:macro name="staubli_ros2_control" params="
         name
         robot_prefix:=^
+        robot_ip:=^
         robot_model_parameters_file:=^
         initial_positions_file:=^
         use_mock_hardware:=^
@@ -26,9 +27,16 @@
                 <param name="mock_sensor_commands">${mock_sensor_commands}</param>
             </xacro:if>
             <xacro:unless value="${use_mock_hardware}">
-
-                <!-- TODO: Implement real hardware interface -->
-
+                <plugin>staubli_robot_driver/StaubliHardwareInterface</plugin>
+                <param name="robot_ip">${robot_ip}</param>
+                <param name="control_port">56123</param>
+                <param name="diagnostic_port">56124</param>
+                <param name="local_control_port">56123</param>
+                <param name="local_diagnostic_port">56124</param>
+                <param name="num_digital_inputs">${num_digital_inputs}</param>
+                <param name="num_digital_outputs">${num_digital_outputs}</param>
+                <param name="num_analog_inputs">${num_analog_inputs}</param>
+                <param name="num_analog_outputs">${num_analog_outputs}</param>
             </xacro:unless>
         </hardware>
 
@@ -44,6 +52,7 @@
 
         <!-- GPIOs -->
 
+        <!--
         <xacro:r2c_gpios_control_description
             robot_prefix="${robot_prefix}"
             num_digital_inputs="${num_digital_inputs}"
@@ -51,6 +60,7 @@
             num_analog_inputs="${num_analog_inputs}"
             num_analog_outputs="${num_analog_outputs}"
         />
+        -->
 
         <!-- GPIOs for Control / Supervision -->
         <!-- TODO -->

@@ -1,0 +1,316 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="controlTask">
+    <Locals>
+      <Local name="l_bError" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bErrorTmp" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bRxError" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bPreviousRxError" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bTxError" type="bool" xsi:type="array" size="1" />
+      <Local name="l_nSequenceNumber" type="num" xsi:type="array" size="1" />
+      <Local name="l_nSequenceDelay" type="num" xsi:type="array" size="1" />
+      <Local name="robot_state_msg" type="RobotStateMsg" xsi:type="array" size="1" />
+      <Local name="robot_command_msg" type="RobotCommandMsg" xsi:type="array" size="1" />
+      <Local name="l_nCmdMode" type="num" xsi:type="array" size="1" />
+      <Local name="l_nPreviousCmdMode" type="num" xsi:type="array" size="1" />
+      <Local name="l_bNewCmdMessage" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bStopControlTask" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bControlActive" type="bool" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  popUpMsg("ros2_server::controlTask : Initializing control task")
+  l_bStopControlTask = false
+  // Reset errors
+  l_bError = false
+  l_bErrorTmp = false
+  l_bControlActive = false
+  nOverruns = 0
+  l_nSequenceNumber = 0
+  l_nSequenceDelay = 1000
+
+  // Reset command mode (STOP)
+  // Implemented modes :
+  // 0 : Invalid / Error
+  // 1 : STOP / Idle
+  // 2 : Joint position control
+  // 3 : Joint velocity control
+  l_nCmdMode = 1
+  l_nPreviousCmdMode = 1
+
+  // Initialize robot state message
+  call initRobotStateMsg(robot_state_msg, l_bErrorTmp)
+  if(l_bErrorTmp)
+    l_bError = true
+    logMsg("ros2_server::controlTask : Error, failed to init robot state msg", 3)
+    return
+  endIf
+
+  // Initialize robot command message
+  call initRobotCommandMsg(robot_command_msg, l_bErrorTmp)
+  if(l_bErrorTmp)
+    l_bError = true
+    logMsg("ros2_server::controlTask : Error, failed to init robot command msg", 3)
+    return
+  endIf
+
+  // Initialize control socket
+  call resetControlSocket(siSocketControl, l_bErrorTmp)
+  if(l_bErrorTmp)
+    l_bError = true
+    logMsg("ros2_server::controlTask : Error, failed to reset socket", 3)
+    return
+  endIf
+
+  popUpMsg("ros2_server::controlTask : Starting control task")
+
+  // Main control loop
+  while !l_bStopControlTask
+    // Check for task overrun
+    if bIsOverrun
+      logMsg("ros2_server::controlTask : Task overrun detected", 2)
+      bIsOverrun = false
+      nOverruns = nOverruns + 1
+    endIf
+    // -------------------------------
+    // Update and publish robot state
+    // -------------------------------
+
+    // Update robot state
+    call updateState(robot_state_msg.robotState)
+
+    // Update sequence number
+    call getNextSequenceNumber(l_nSequenceNumber)
+    robot_state_msg.header.nMsgSequenceNumber = l_nSequenceNumber
+    robot_state_msg.robotState.nSequenceDelay = l_nSequenceDelay
+
+    // Check for errors that would require a hard stop now
+    // Robot is moving when it shouldn't
+    // TODO
+    // Warning emergency stop pressed
+    // TODO
+    // Runtime errors
+    // TODO
+
+    // Publish robot state
+    l_bTxError = false
+    call encodeRobotStateMsg(robot_state_msg, l_bTxError)
+    if(!l_bTxError)
+      call sendData(siSocketControl, robot_state_msg.nSerializedData, l_bTxError)
+    endIf
+    if(l_bTxError)
+      logMsg("ros2_server::controlTask : Failed to encode/send robot state", 2)
+      l_bError = true
+    endIf
+
+    // -------------------------------
+    // Receive and process command
+    // -------------------------------
+    // (Try to) read the last command msg
+    call readData(siSocketControl, robot_command_msg.nSerializedData, l_bNewCmdMessage, l_bRxError)
+
+    if(l_bRxError)
+      logMsg("ros2_server::controlTask : error during command msg read", 2)
+      l_bError = true
+    else
+      // New data received?
+      if(l_bNewCmdMessage)
+        call decodeRobotCommandMsg(robot_command_msg, l_bErrorTmp)
+        if(l_bErrorTmp)
+          logMsg("ros2_server::controlTask : Error, failed to decode command msg", 3)
+          // Flag fatal error and go to STOP mode
+          l_bError = true
+          l_nCmdMode = 1
+        endIf
+      elseIf(robot_command_msg.robotCommand.bIsValid)
+        // No new message, check staleness of previous message
+        // TODO
+      endIf
+    endIf
+
+    if (l_bNewCmdMessage and !l_bControlActive)
+      l_bControlActive = true
+      logMsg("ros2_server::controlTask : connection to controller established", 1)
+    endIf
+
+    // Check stream (staleness, lost pkg, etc.)
+    if (robot_command_msg.robotCommand.bIsValid)
+      call computeSequenceDelay(l_nSequenceNumber, robot_command_msg.header.nMsgSequenceNumber, l_nSequenceDelay)
+    else
+      // No valid command received yet, set arbitrary large delay
+      l_nSequenceDelay = 1000
+    endIf
+
+    if (l_bControlActive)
+      if (l_nSequenceDelay > 2)
+        logMsg("ros2_server::controlTask : Warning, command sequence delay (" + toString("0.1", l_nSequenceDelay) + ") detected", 2)
+      endIf
+      if (l_nSequenceDelay > 4)
+        logMsg("ros2_server::controlTask : Error, command sequence delay too high (" + toString("0.1", l_nSequenceDelay) + "), going to STOP mode", 3)
+        l_bError = true
+        l_nCmdMode = 1
+      endIf
+      if (l_nSequenceDelay < 0)
+        logMsg("ros2_server::controlTask : Error, negative command sequence delay, going to STOP mode", 3)
+        l_bError = true
+        l_nCmdMode = 1
+      endIf
+    endIf
+
+    // Check command type validity
+    if (robot_command_msg.robotCommand.nMotionCmdType < 0 or robot_command_msg.robotCommand.nMotionCmdType > 4)
+      logMsg("ros2_server::controlTask : Error, invalid command mode", 2)
+      robot_command_msg.robotCommand.bIsValid = false
+      l_bError = true
+    endIf
+    // TODO: staleness, lost pkg, etc.
+
+    // Extract command mode
+    if (l_bError or !robot_command_msg.robotCommand.bIsValid)
+      // In case of error, go to ERROR mode
+      l_nCmdMode = 0
+    else
+      l_nCmdMode = robot_command_msg.robotCommand.nMotionCmdType
+    endIf
+
+    // Check command transition validity
+    if(l_nPreviousCmdMode != l_nCmdMode and l_nCmdMode != 1 and l_nPreviousCmdMode != 1)
+      // Transitioning from a command mode to another requires a stop
+      l_nCmdMode = 1
+      l_bError = true
+      logMsg("ros2_server::controlTask : Error, transitioning from command modes requires a stop", 2)
+    endIf
+
+    if (l_nPreviousCmdMode == 1 and l_nCmdMode != 1 and robot_state_msg.robotState.bInMotion)
+      // Robot is still moving from previous command, cannot start new command yet
+      l_nCmdMode = 1
+      logMsg("ros2_server::controlTask : Warning, robot still in motion, cannot start new command yet", 2)
+      l_bError = true
+    endIf
+
+    // -------------------------------
+    // Execute motion command
+    // -------------------------------
+    if(l_nCmdMode <= 1)
+      // -------------------------------
+      // Execute STOP command (or ERROR)
+      // -------------------------------
+      if(l_nPreviousCmdMode == 2)
+        logMsg("ros2_server::controlTask : Stopping joint position command mode", 1)
+        call stopJointPositionControl(l_bErrorTmp)
+        if(l_bErrorTmp)
+          l_bError = true
+          logMsg("ros2_server::controlTask : Error, failed to stop joint position control", 2)
+        endIf
+      elseIf(l_nPreviousCmdMode == 3)
+        logMsg("ros2_server::controlTask : Stopping joint velocity command mode", 1)
+        call stopJointVelocityControl(l_bErrorTmp)
+        if(l_bErrorTmp)
+          l_bError = true
+          logMsg("ros2_server::controlTask : Error, failed to stop joint velocity control", 2)
+        endIf
+      endIf
+      // Stop / wait for new command
+      stopMove()
+      resetMotion()
+    elseIf(l_nCmdMode == 2)
+      // -------------------------------
+      // Execute joint position command
+      // -------------------------------
+      if(l_nPreviousCmdMode == 1)
+        logMsg("ros2_server::controlTask : Starting joint position command mode", 1)
+        call updateJointPositionControl(robot_state_msg.robotState, robot_command_msg.robotCommand, l_bErrorTmp, true)
+      else
+        // Continuing in position control mode
+        call updateJointPositionControl(robot_state_msg.robotState, robot_command_msg.robotCommand, l_bErrorTmp, false)
+      endIf
+      if(l_bErrorTmp)
+        l_bError = true
+        logMsg("ros2_server::controlTask : Error, failed to update joint position control", 2)
+      endIf
+    elseIf(l_nCmdMode == 3)
+      // -------------------------------
+      // Execute joint velocity command
+      // -------------------------------
+      if(l_nPreviousCmdMode == 1)
+        logMsg("ros2_server::controlTask : Starting joint velocity command mode", 1)
+        call updateJointVelocityControl(robot_state_msg.robotState, robot_command_msg.robotCommand, l_bErrorTmp, true)
+      else
+        // Continuing in velocity control mode
+        call updateJointVelocityControl(robot_state_msg.robotState, robot_command_msg.robotCommand, l_bErrorTmp, false)
+      endIf
+      if(l_bErrorTmp)
+        l_bError = true
+        logMsg("ros2_server::controlTask : Error, failed to update joint velocity control", 2)
+      endIf
+    else
+      // -------------------------------
+      // Handle invalid motion command
+      // -------------------------------
+      logMsg("ros2_server::controlTask : Unknown command mode", 2)
+      l_bError = true
+    endIf
+
+    // -------------------------------
+    // Execute GPIO commands
+    // -------------------------------
+    // TODO: write digital outputs based on command
+    // TODO: write analog outputs based on command
+
+    // -------------------------------
+    // Handle errors
+    // -------------------------------
+    if(l_bError)
+      logMsg("ros2_server::controlTask : Error, hard stop and reset", 3)
+
+      // Stop motion
+      if (l_nCmdMode == 2)
+        logMsg("ros2_server::controlTask : Stopping joint position command mode due to error", 1)
+        call stopJointPositionControl(l_bErrorTmp)
+        if(l_bErrorTmp)
+          logMsg("ros2_server::controlTask : Error, failed to stop joint position control", 2)
+        endIf
+      endIf
+
+      stopMove()
+      resetMotion()
+      robot_command_msg.robotCommand.nMotionCmdType = 0
+      l_nCmdMode = 0
+
+      // Clear flag and reset communication
+      l_bError = false
+
+      l_nSequenceNumber=0
+      l_nSequenceDelay = 1000
+      l_bTxError = false
+      l_bRxError = false
+      l_bPreviousRxError = false
+      l_bControlActive = false
+      robot_command_msg.robotCommand.bIsValid = false
+      call resetControlSocket(siSocketControl, l_bErrorTmp)
+      if(l_bErrorTmp)
+        logMsg("ros2_server::controlTask : Error, failed to reset socket")
+        l_bError = true
+      endIf
+
+      // TODO: add delay (e.g., 1000ms) before accepting new commands?
+    endIf
+
+    // -------------------------------
+    // Prepare for next iteration
+    // -------------------------------
+    l_nPreviousCmdMode = l_nCmdMode
+    l_bPreviousRxError = l_bRxError
+
+    // Sleep until next period
+    delay(0)
+    // -------------------------------
+  endWhile
+
+  // Cleanup
+  logMsg("ros2_server::controlTask : Stopping Control Loop")
+  stopMove()
+  resetMotion()
+end
+    ]]></Code>
+  </Program>
+</Programs>

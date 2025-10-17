@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Database xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Data/2">
+  <Datas>
+    <Data name="nMagicNumber" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nProtocolVersion" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nMsgType" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nMsgSequenceNumber" access="public" xsi:type="array" type="num" size="1" />
+    <Data name="nPayloadSize" access="public" xsi:type="array" type="num" size="1" />
+
+    <!-- Header size in bytes, 8 for current header definition (not serialized) -->
+    <!-- Should be initialized as default value in Message types (e.g., RobotStateMsg) -->
+    <Data name="nHeaderSize" access="public" xsi:type="array" type="num" size="1" />
+  </Datas>
+</Database>

@@ -43,6 +43,8 @@ public:
     struct NetworkConfig {
         /// IP address of the Staubli robot
         std::string robot_ip = "";
+        /// Local IP address to bind to (empty string binds to any interface)
+        std::string local_ip = "";
         /// Port for control communication on the robot
         uint16_t control_port = DEFAULT_CONTROL_PORT;
         /// Port for control communication on ROS2 side
@@ -142,6 +144,14 @@ public:
     void set_diagnostic_staleness_timeout(
         rclcpp::Duration staleness_timeout = rclcpp::Duration(0, 1e8));
 
+    /**
+     * @brief Get the sequence ID of the last valid received robot state message
+     * @return Sequence ID of the last valid robot state message
+     */
+    size_t get_current_message_sequence() const {
+        return last_valid_sequence_id_;
+    }
+
 protected:
     // Helper methods
     void reset_data();
@@ -164,7 +174,7 @@ private:
         RealTimeSocketSubscriber<DiagnosticDataMessage>> diagnostics_subscriber_;
 
     // State tracking
-    size_t last_valid_sequence_id_;
+    size_t last_valid_sequence_id_ = 0;
     RobotStateMessage current_robot_state_;
     DiagnosticDataMessage current_diagnostic_data_;
 
