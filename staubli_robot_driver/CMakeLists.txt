@@ -116,7 +116,6 @@ install(PROGRAMS
   scripts/download_logs.py
   scripts/remove_val3_server.py
   scripts/upload_val3_server.py
-  scripts/show_logs.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
