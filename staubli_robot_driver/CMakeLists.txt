@@ -109,6 +109,20 @@ install(
 )
 
 
+# Install Python scripts
+ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/upload_val3_server.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install other files (i.e., VAL3 scripts)
+install(
+  DIRECTORY val3
+  DESTINATION share/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
