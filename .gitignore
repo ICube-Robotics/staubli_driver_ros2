@@ -2,5 +2,8 @@ build/
 install/
 log/
 
+# Staubli robot logs
+.staubli_robot_logs/
+
 # Python cache files
 **/__pycache__/**
