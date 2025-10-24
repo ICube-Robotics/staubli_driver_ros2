@@ -5,6 +5,7 @@
       <Local name="l_sVal3" type="string" xsi:type="array" size="1" />
       <Local name="l_sMajor" type="string" xsi:type="array" size="1" />
       <Local name="l_nCtrlPeriod" type="num" xsi:type="array" size="1" />
+      <Local name="l_nBoxcarDelay" type="num" xsi:type="array" size="1" />
     </Locals>
     <Code><![CDATA[begin
   logMsg("ros2_server::start : starting application")
@@ -12,6 +13,11 @@
   // Get VAL3 version
   l_sVal3=getVersion("System")
   l_sMajor=mid(l_sVal3,1,1)
+
+  // Check boxcar filter configuration
+  //$setBoxcarFreq(60.0)
+  l_nBoxcarDelay = $getBoxcarDelay()
+  logMsg("ros2_server::start : boxcar delay is " + toString("0.1",l_nBoxcarDelay), 1)
 
   // Speed must be at 100%
   if getMonitorSpeed()<100

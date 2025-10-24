@@ -14,7 +14,7 @@
   <udpSocket>
     <String name="name" value="control" />
     <String name="desc" value="Control socket to publish state and receive commands" />
-    <Inet name="connectIp" value="172.31.0.2" />
+    <Inet name="connectIp" value="192.168.0.1" />
     <Uint name="portNumber" value="11000" />
     <Int name="endOfString" value="10" />
     <Float name="timeOut" value="-0.001" />
@@ -24,7 +24,7 @@
   <udpSocket>
     <String name="name" value="diagnostics" />
     <String name="desc" value="Diagnostic socket to publish diagnostic information" />
-    <Inet name="connectIp" value="172.31.0.2" />
+    <Inet name="connectIp" value="192.168.0.1" />
     <Uint name="portNumber" value="11001" />
     <Int name="endOfString" value="10" />
     <Float name="timeOut" value="-0.001" />

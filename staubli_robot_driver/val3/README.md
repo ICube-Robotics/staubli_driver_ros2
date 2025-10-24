@@ -23,23 +23,21 @@ Additionally, the addons `alter` and `advCtrlFunctions` are used, but they come 
 
 ### Transfer app to robot controller
 
-1) Connect the `J205` Ethernet port to the remote controller PC (ROS2-side)
+1) Connect the `J204` Ethernet port to the remote controller PC (ROS2-side)
 2) Setup your IP address as `192.168.0.1` with mask `255.255.255.0`
 3) Connect to FTP server at `192.168.0.254` (e.g., using filezilla app)
 4) Copy the contents of `staubli_robot_driver/val3/userapp` to the `userapp` folder of the controller.
 5) Replace / modify the controller network config. Either by transferring `staubli_robot_driver/val3/configs/sio.cfx` manually:
 
-| Socket type | Socket name | Timeout | Fin de string  | port  | IP remote  |
-|-------------|-------------|---------|----------------|-------|------------|
-|     UDP     |   control   |    -1   |  10 (linux)    | 11000 | 172.31.0.2 |
-|     UDP     | diagnostics |    -1   |  10 (linux)    | 11001 | 172.31.0.2 |
+| Socket type | Socket name | Timeout | Fin de string  | port  | IP remote   |
+|-------------|-------------|---------|----------------|-------|-------------|
+|     UDP     |   control   |    -1   |  10 (linux)    | 11000 | 192.168.0.1 |
+|     UDP     | diagnostics |    -1   |  10 (linux)    | 11001 | 192.168.0.1 |
 
 ## Load and start application
 
-1) Connect the `J204` Ethernet port to the remote controller PC (ROS2-side)
-2) Setup your IP address as `172.30.0.2` with mask `255.255.255.0`
-3) Power the robot ON
-4) Load the application from the disk
-5) Start the application on the pendant
-6) Start the ROS2 driver
+1) Power the robot ON
+2) Load the application from the disk
+3) Start the application on the pendant
+4) Start the ROS2 driver
 

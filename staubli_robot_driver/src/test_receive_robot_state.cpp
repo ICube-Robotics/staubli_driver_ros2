@@ -52,7 +52,7 @@ int main() {
     }
 
     // Connect to robot (robot will send messages to us)
-    std::string robot_ip = "172.31.0.1";  // Default robot IP
+    std::string robot_ip = "192.168.0.254";  // Default robot IP
     std::string local_ip = "";  // Local IP address to bind to ("" means any)
     uint16_t local_port = 11000;  // Port we listen on
     uint16_t robot_port = 11000;  // Port robot sends from
