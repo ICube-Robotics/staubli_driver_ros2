@@ -224,9 +224,28 @@ hardware_interface::CallbackReturn StaubliHardwareInterface::on_shutdown(
     RCLCPP_DEBUG(rclcpp::get_logger("StaubliHardwareInterface"),
         "Shutting down hardware interface");
 
-    if (robot_driver_) {
-        robot_driver_->send_stop_all_command();
+    if (robot_driver_ && robot_driver_->is_connected()) {
+        if (state_msg_.control_state != CommandType::STOP) {
+            robot_driver_->send_stop_all_command();
+        }
         robot_driver_->disconnect();
+    }
+
+    return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn StaubliHardwareInterface::on_error (
+  const rclcpp_lifecycle::State& /*previous_state*/)
+{
+    RCLCPP_DEBUG(rclcpp::get_logger("StaubliHardwareInterface"),
+        "Handling error state in hardware interface");
+
+    if (robot_driver_ && robot_driver_->is_connected()) {
+        robot_driver_->send_stop_all_command();
+    } else {
+        RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+            "Robot driver not connected during error handling");
+        return hardware_interface::CallbackReturn::ERROR;
     }
 
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -316,14 +335,13 @@ hardware_interface::return_type StaubliHardwareInterface::read(
         return hardware_interface::return_type::ERROR;
     }
 
-    RobotStateMessage state_msg;
-    if (!robot_driver_->read_robot_state(state_msg)) {
+    if (!robot_driver_->read_robot_state(state_msg_)) {
         RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"), "Failed to read robot state");
         return hardware_interface::return_type::ERROR;
     }
 
     // Update internal state
-    if (!update_state(state_msg)) {
+    if (!update_state(state_msg_)) {
         return hardware_interface::return_type::ERROR;
     }
 
@@ -337,6 +355,16 @@ hardware_interface::return_type StaubliHardwareInterface::write(
     if (!robot_driver_ || !robot_driver_->is_connected()) {
         RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"), "Robot driver not connected");
         return hardware_interface::return_type::ERROR;
+    }
+
+    // Check for error state
+    if (current_control_mode_ != CommandType::STOP) {
+        if (state_msg_.error_state || state_msg_.control_state == CommandType::INVALID) {
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Robot is in error state!");
+            robot_driver_->send_stop_all_command();
+            return hardware_interface::return_type::ERROR;
+        }
     }
 
     // Create command message

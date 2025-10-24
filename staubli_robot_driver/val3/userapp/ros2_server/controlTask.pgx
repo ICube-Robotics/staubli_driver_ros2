@@ -16,6 +16,7 @@
       <Local name="l_bNewCmdMessage" type="bool" xsi:type="array" size="1" />
       <Local name="l_bStopControlTask" type="bool" xsi:type="array" size="1" />
       <Local name="l_bControlActive" type="bool" xsi:type="array" size="1" />
+      <Local name="throttle_sequence_delay_msg" type="ThrottleLogMsg" xsi:type="array" size="1" />
     </Locals>
     <Code><![CDATA[begin
   popUpMsg("ros2_server::controlTask : Initializing control task")
@@ -61,9 +62,13 @@
     return
   endIf
 
-  popUpMsg("ros2_server::controlTask : Starting control task")
+  // Initialize throttle log msg for sequence delay warnings
+  throttle_sequence_delay_msg.sMsg = "ros2_server::controlTask : communication latency detected! "
+  throttle_sequence_delay_msg.nThrottleInterval = 10.0
+  throttle_sequence_delay_msg.nSeverity = 2
 
   // Main control loop
+  popUpMsg("ros2_server::controlTask : Starting control task")
   while !l_bStopControlTask
     // Check for task overrun
     if bIsOverrun
@@ -92,6 +97,7 @@
     // TODO
 
     // Update control state
+    robot_state_msg.robotState.bInError = l_bError
     robot_state_msg.robotState.nControlMode = l_nCmdMode
     // Publish robot state
     l_bTxError = false
@@ -144,7 +150,7 @@
 
     if (l_bControlActive)
       if (l_nSequenceDelay > 2)
-        logMsg("ros2_server::controlTask : Warning, command sequence delay (" + toString("0.1", l_nSequenceDelay) + ") detected", 2)
+        call logThrottleMsg(throttle_sequence_delay_msg)
       endIf
       if (l_nSequenceDelay > 4)
         logMsg("ros2_server::controlTask : Error, command sequence delay too high (" + toString("0.1", l_nSequenceDelay) + "), going to STOP mode", 3)

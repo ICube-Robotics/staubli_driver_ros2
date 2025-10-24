@@ -54,6 +54,9 @@ public:
     hardware_interface::CallbackReturn
     on_shutdown(const rclcpp_lifecycle::State& previous_state) final;
 
+    hardware_interface::CallbackReturn
+    on_error (const rclcpp_lifecycle::State& previous_state) final;
+
     std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
     std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
@@ -79,6 +82,9 @@ private:
 private:
     /// Robot driver instance
     std::shared_ptr<RobotDriver> robot_driver_;
+
+    /// Latest received robot state message
+    RobotStateMessage state_msg_;
 
     /// Enum defining the current control mode
     CommandType current_control_mode_;

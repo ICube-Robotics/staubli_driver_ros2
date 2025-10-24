@@ -16,3 +16,5 @@ cd ..
 colcon build
 source install/setup.bash
 ```
+
+Then follow instruction at [staubli_robot_driver/val3/README.md](staubli_robot_driver/README.md).

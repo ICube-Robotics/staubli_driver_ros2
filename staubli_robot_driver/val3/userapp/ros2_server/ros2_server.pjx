@@ -19,6 +19,7 @@
     <Program file="Serialization/initHeader.pgx" />
     <Program file="Serialization/initRobotCommandMsg.pgx" />
     <Program file="Serialization/initRobotStateMsg.pgx" />
+    <Program file="Utils/logThrottleMsg.pgx" />
     <Program file="start.pgx" />
     <Program file="stop.pgx" />
     <Program file="updateState.pgx" />
@@ -28,6 +29,7 @@
   </Database>
   <Libraries />
   <Types>
+    <Type name="ThrottleLogMsg" path="Disk://ros2_server/Types/ThrottleLogMsg/ThrottleLogMsg.pjx" />
     <Type name="MessageHeader" path="Disk://ros2_server/Types/MessageHeader/MessageHeader.pjx" />
     <Type name="RobotState" path="Disk://ros2_server/Types/RobotState/RobotState.pjx" />
     <Type name="RobotStateMsg" path="Disk://ros2_server/Types/RobotStateMsg/RobotStateMsg.pjx" />
