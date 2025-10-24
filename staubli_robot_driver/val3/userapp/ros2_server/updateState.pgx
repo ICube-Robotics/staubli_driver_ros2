@@ -33,9 +33,9 @@
   //  - 2 SS1 - Safety stop condition
   //  - 3 SS2 - Safe operating stop condition
   //  - 4 Waiting restart from WMS
-  l_nEStopStatus = esStatus()
-  x_state.bEStopped = (l_nEStopStatus != 0)
-  x_state.bWaitAck = (l_nEStopStatus == 1)
+  x_state.nSafetyStatus = esStatus()
+  x_state.bEStopped = (x_state.nSafetyStatus != 0)
+  x_state.bWaitAck = (x_state.nSafetyStatus == 1)
 
 
   // Robot working mode

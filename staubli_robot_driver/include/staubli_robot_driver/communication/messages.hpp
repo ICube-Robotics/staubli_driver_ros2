@@ -29,7 +29,11 @@ namespace staubli_robot_driver {
  *          It is sent periodically by the robot controller.
  *
  * Payload format:
+ *   - Sequence delay (2 bytes, uint16_t)
+ *   - Control state (1 byte, uint8_t), see `CommandType` enum
+ *   - Safety status (1 byte, uint8_t), see `SafetyStatus` enum
  *   - Operation mode (1 byte, uint8_t)
+ *   - Operation mode status (1 byte, uint8_t)
  *   - Robot status flag array (2 bytes, uint16_t), see `StatusFlag` enum
  *   - Valid fields flag array (2 bytes, uint16_t), see `ValidFieldFlag` enum
  *   - Joint positions (6 * 4 bytes, float array)
@@ -84,6 +88,15 @@ public:
 
     // Robot operation mode
     OperationMode operation_mode = OperationMode::UNKNOWN;
+
+    // Robot operation mode status (signification depends on mode...)
+    uint8_t operation_mode_status = 100;
+
+    // Current robot control state
+    CommandType control_state = CommandType::INVALID;
+
+    // Safety state enum
+    SafetyStatus safety_status = SafetyStatus::NO_SAFETY_STOP;
 
     // Robot status flags
     bool power_on = false;

@@ -72,6 +72,9 @@ enum class CommandType : uint8_t {
     JOINT_POSITION = 0x02,
     JOINT_VELOCITY = 0x03,
     JOINT_TORQUE = 0x04,
+    // Used by VAL3 server, not valid command to send to robot
+    DECELERATION_JOINT_POSITION = 0x0A,
+    DECELERATION_JOINT_VELOCITY = 0x0B
 };
 
 /**
@@ -82,6 +85,32 @@ enum class OperationMode : uint8_t {
     MANUAL = 0x01,
     AUTOMATIC = 0x02,
     REMOTE = 0x03
+};
+
+// /**
+//  * @brief Operation mode statuses
+//  */
+// enum class OperationModeStatus : uint8_t {
+//     UNKNOWN = 0x00,
+//     PROGRAMMED_MOTION = 0x01,
+//     CONNECTION_MOTION = 0x02,
+//     HOLDING_POSITION = 0x03,
+//     MANUAL_JOINT_JOG = 0x04,
+//     MANUAL_FRAME_JOG = 0x05,
+//     MANUAL_TOOL_JOG = 0x06,
+//     MANUAL_POINT_JOG = 0x07
+// };
+
+
+/**
+ * @brief Safety status
+ */
+enum class SafetyStatus : uint8_t {
+    NO_SAFETY_STOP = 0x00,
+    WAIT_FOR_RESTART = 0x01,
+    SS1 = 0x02,
+    SS2 = 0x03,
+    WAIT_FOR_WMS = 0x04
 };
 
 /**

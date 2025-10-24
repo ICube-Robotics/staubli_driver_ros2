@@ -31,7 +31,7 @@
   // Set message type and payload size
   // Total serialized data size = header size + payload size
   x_msg.header.nMsgType = 1
-  x_msg.header.nPayloadSize = 121
+  x_msg.header.nPayloadSize = 124
 
   // Resize serialized data buffer
   resize(x_msg.nSerializedData, 1, x_msg.header.nHeaderSize + x_msg.header.nPayloadSize)

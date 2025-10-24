@@ -29,6 +29,8 @@ using staubli_robot_driver::DiagnosticDataMessage;
 using staubli_robot_driver::MessageType;
 using staubli_robot_driver::OperationMode;
 using staubli_robot_driver::CommandType;
+using staubli_robot_driver::SafetyStatus;
+
 using staubli_robot_driver::MAGIC_NUMBER;
 using staubli_robot_driver::PROTOCOL_VERSION;
 
@@ -77,7 +79,11 @@ TEST_F(MessageSerializationTest, RobotStateMessageSerializationDeserialization) 
   original_msg.header.sequence_number = 42;
 
   // Set basic fields
+  original_msg.sequence_delay = 3;
+  original_msg.control_state = CommandType::JOINT_VELOCITY;
+  original_msg.safety_status = SafetyStatus::SS1;
   original_msg.operation_mode = OperationMode::AUTOMATIC;
+  original_msg.operation_mode_status = 3;
 
   // Set status flags
   original_msg.power_on = true;
@@ -126,7 +132,11 @@ TEST_F(MessageSerializationTest, RobotStateMessageSerializationDeserialization) 
   EXPECT_EQ(original_msg.header.message_type, deserialized_msg.header.message_type);
 
   // Verify basic fields
+  EXPECT_EQ(original_msg.sequence_delay, deserialized_msg.sequence_delay);
+  EXPECT_EQ(original_msg.control_state, deserialized_msg.control_state);
+  EXPECT_EQ(original_msg.safety_status, deserialized_msg.safety_status);
   EXPECT_EQ(original_msg.operation_mode, deserialized_msg.operation_mode);
+  EXPECT_EQ(original_msg.operation_mode_status, deserialized_msg.operation_mode_status);
 
   // Verify status flags
   EXPECT_EQ(original_msg.power_on, deserialized_msg.power_on);

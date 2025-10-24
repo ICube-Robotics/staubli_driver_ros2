@@ -48,7 +48,7 @@ RobotStateMessage::RobotStateMessage() : Message()
     analog_inputs.fill(0.0);
 }
 
-size_t RobotStateMessage::message_size() { return 129; }
+size_t RobotStateMessage::message_size() { return 132; }
 
 bool RobotStateMessage::serialize(uint8_t* buffer, size_t buffer_size) const
 {
@@ -103,7 +103,10 @@ bool RobotStateMessage::serialize(uint8_t* buffer, size_t buffer_size) const
 
     // Serialize the rest of the data
     offset += serialize_type(sequence_delay, buffer + offset);
+    offset += serialize_type(static_cast<uint8_t>(control_state), buffer + offset);
+    offset += serialize_type(static_cast<uint8_t>(safety_status), buffer + offset);
     offset += serialize_type(static_cast<uint8_t>(operation_mode), buffer + offset);
+    offset += serialize_type(static_cast<uint8_t>(operation_mode_status), buffer + offset);
     offset += serialize_type(status_flags, buffer + offset);
     offset += serialize_type(valid_fields_flags, buffer + offset);
     offset += serialize_array<double, 6>(joint_positions, buffer + offset);
@@ -143,9 +146,18 @@ bool RobotStateMessage::deserialize(uint8_t* buffer, size_t buffer_size)
 
     // Deserialize the rest of the data
     offset += deserialize_type(buffer + offset, sequence_delay);
+    uint8_t control_state_u8;
+    offset += deserialize_type(buffer + offset, control_state_u8);
+    control_state = static_cast<CommandType>(control_state_u8);
+    uint8_t safety_status_u8;
+    offset += deserialize_type(buffer + offset, safety_status_u8);
+    safety_status = static_cast<SafetyStatus>(safety_status_u8);
     uint8_t operation_mode_u8;
     offset += deserialize_type(buffer + offset, operation_mode_u8);
     operation_mode = static_cast<OperationMode>(operation_mode_u8);
+    uint8_t operation_mode_status_u8;
+    offset += deserialize_type(buffer + offset, operation_mode_status_u8);
+    operation_mode_status = operation_mode_status_u8;
 
     uint16_t status_flags;
     offset += deserialize_type(buffer + offset, status_flags);

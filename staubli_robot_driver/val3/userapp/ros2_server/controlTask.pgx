@@ -91,6 +91,8 @@
     // Runtime errors
     // TODO
 
+    // Update control state
+    robot_state_msg.robotState.nControlMode = l_nCmdMode
     // Publish robot state
     l_bTxError = false
     call encodeRobotStateMsg(robot_state_msg, l_bTxError)

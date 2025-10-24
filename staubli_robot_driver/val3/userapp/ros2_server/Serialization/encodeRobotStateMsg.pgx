@@ -44,7 +44,7 @@
     logMsg("ros2_server::encodeRobotStateMsg : header size is 1 (probably not initialized!)",3)
     return
   endIf
-  
+
   if(size(x_msg.nSerializedData) != (x_msg.header.nPayloadSize + x_msg.header.nHeaderSize))
     x_bError = true
     logMsg("ros2_server::encodeRobotStateMsg : Error, invalid payload size",2)
@@ -53,7 +53,7 @@
 
   // Encode header
   call encodeHeader(x_msg.header, x_msg.nSerializedData, x_bError)
-  
+
   if(x_bError == true)
     logMsg("ros2_server::encodeRobotStateMsg : Error, failed to encode header",2)
     return
@@ -64,18 +64,27 @@
   l_nStatusFlags = 0
   l_nValidFieldFlags = 0
   l_nDigitalInputFlags = 0
-  
+
   // Serialization
   // uint8_t   <-> "1" Unsigned byte
   // uint16_t  <-> "2l" Unsigned word, little endian
   // float32_t <-> "4.0l" Single precision floating point value, little endian
-  
+
   // We start writing after the header
   l_nIndexOffset = x_msg.header.nHeaderSize
   toBinary(x_msg.robotState.nSequenceDelay, 2, "2l",x_msg.nSerializedData[l_nIndexOffset])
   l_nIndexOffset = l_nIndexOffset + 2
+
+  toBinary(x_msg.robotState.nControlMode ,1,"1",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 1
+  toBinary(x_msg.robotState.nSafetyStatus ,1,"1",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 1
+
   toBinary(x_msg.robotState.nRobotMode ,1,"1",x_msg.nSerializedData[l_nIndexOffset])
   l_nIndexOffset = l_nIndexOffset + 1
+  toBinary(x_msg.robotState.nRobotStatus ,1,"1",x_msg.nSerializedData[l_nIndexOffset])
+  l_nIndexOffset = l_nIndexOffset + 1
+
   toBinary(l_nStatusFlags,2,"2l",x_msg.nSerializedData[l_nIndexOffset])
   l_nIndexOffset = l_nIndexOffset + 2
   toBinary(l_nValidFieldFlags,2,"2l",x_msg.nSerializedData[l_nIndexOffset])
@@ -127,7 +136,7 @@
   toBinary(x_msg.robotState.nFtSensorValues[2], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
   l_nIndexOffset = l_nIndexOffset + 4
   // toBinary(x_msg.robotState.nFtSensorValues[3], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
-  l_nIndexOffset = l_nIndexOffset + 4  
+  l_nIndexOffset = l_nIndexOffset + 4
   // toBinary(x_msg.robotState.nFtSensorValues[4], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
   l_nIndexOffset = l_nIndexOffset + 4
   // toBinary(x_msg.robotState.nFtSensorValues[5], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
@@ -145,13 +154,13 @@
   l_nIndexOffset = l_nIndexOffset + 4
   // toBinary(x_msg.robotState.nAnalogInputs[3], 4, "4.0l",x_msg.nSerializedData[l_nIndexOffset])
   l_nIndexOffset = l_nIndexOffset + 4
-  
+
   if(l_nIndexOffset != size(x_msg.nSerializedData) )
     x_bError = true
     logMsg("ros2_server::encodeRobotStateMsg : Error, binary encoding failed",2)
     return
   endIf
-  
+
   // OK
   x_bError = false
 end]]></Code>
