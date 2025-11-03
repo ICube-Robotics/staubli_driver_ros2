@@ -3,10 +3,12 @@
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
     <xacro:macro name="r2c_joints_control_description" params="
         robot_prefix:=^
+        joint_limits_config:=^
         joint_names
         initial_positions
         has_joint_torque_sensor
         has_joint_torque_control
+        include_acceleration_command:=false
     ">
 
     <xacro:macro name="add_all_rc2_joints" params="robot_prefix:=^ joint_list:=^" >
@@ -14,7 +16,20 @@
             <xacro:property name="joint_name" value="${joint_list.pop(0)}"/>
             <joint name="${robot_prefix}${joint_name}">
                 <command_interface name="position"/>
-                <command_interface name="velocity"/>
+                <command_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
+
+                <!-- Add acceleration command interface to provide acceleration limits -->
+                <xacro:if value="${include_acceleration_command}">
+                    <xacro:property name="acc_max" value="${joint_limits_config[joint_name]['max_acceleration']}"/>
+                    <command_interface name="acceleration">
+                        <param name="initial_value">0.0</param>
+                        <param name="max">${acc_max}</param>
+                        <param name="min">${-acc_max}</param>
+                    </command_interface>
+                </xacro:if>
+
 
                 <xacro:if value="${has_joint_torque_control}">
                     <command_interface name="effort"/>

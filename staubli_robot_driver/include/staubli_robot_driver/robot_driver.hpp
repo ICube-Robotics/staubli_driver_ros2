@@ -18,6 +18,7 @@
 #ifndef STAUBLI_ROBOT_DRIVER__ROBOT_DRIVER_HPP_
 #define STAUBLI_ROBOT_DRIVER__ROBOT_DRIVER_HPP_
 
+// C++
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -26,6 +27,7 @@
 #include <string>
 #include <vector>
 
+// Staubli Robot Driver
 #include "staubli_robot_driver/communication/messages.hpp"
 #include "staubli_robot_driver/real_time_socket_interface.hpp"
 

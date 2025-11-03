@@ -17,16 +17,20 @@
 #ifndef STAUBLI_ROBOT_DRIVER__STAUBLI_HARDWARE_INTERFACE_HPP_
 #define STAUBLI_ROBOT_DRIVER__STAUBLI_HARDWARE_INTERFACE_HPP_
 
+// C++
 #include <memory>
 #include <string>
 #include <vector>
 
+// ROS2
+#include "rclcpp_lifecycle/state.hpp"
+
+// ROS2 Control
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_component_interface_params.hpp"
 
-#include "rclcpp_lifecycle/state.hpp"
-
+// Staubli Robot Driver
 #include "staubli_robot_driver/robot_driver.hpp"
 #include "staubli_robot_driver/communication/messages.hpp"
 #include "staubli_robot_driver/communication/protocol.hpp"
@@ -99,6 +103,14 @@ private:
     std::vector<double> hw_joint_position_commands_;  ///< Current joint position commands
     std::vector<double> hw_joint_velocity_commands_;  ///< Current joint velocity commands
     std::vector<double> hw_joint_effort_commands_;    ///< Current joint effort commands
+    /**
+     * @brief Current joint acceleration commands
+     *
+     * @warning This is used to pass acceleration limits to the joint limiter, not to directly
+     * control the robot. Although the command interface is exported, switching to an acceleration
+     * control mode is not supported and **a switch to acceleration mode will ALWAYS BE REJECTED**.
+     */
+    std::vector<double> hw_joint_acceleration_commands_;
 
     // GPIO state
     std::vector<double> hw_digital_inputs_;   ///< Current digital inputs

@@ -17,6 +17,7 @@
 #ifndef STAUBLI_ROBOT_DRIVER__REAL_TIME_SOCKET_SUBSCRIBER_HPP_
 #define STAUBLI_ROBOT_DRIVER__REAL_TIME_SOCKET_SUBSCRIBER_HPP_
 
+// C++
 #include <atomic>
 #include <cstdint>
 #include <chrono>
@@ -25,12 +26,15 @@
 #include <string>
 #include <vector>
 
+// ROS2
 #include <rclcpp/duration.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
+// Realtime tools (ROS2 package)
 #include <realtime_tools/realtime_thread_safe_box.hpp>
 
+// Staubli Robot Driver
 #include "staubli_robot_driver/communication/messages.hpp"
 #include "staubli_robot_driver/communication/protocol.hpp"
 #include "staubli_robot_driver/communication/socket.hpp"

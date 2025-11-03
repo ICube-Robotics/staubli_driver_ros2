@@ -74,6 +74,7 @@
         robot_prefix="$(arg robot_prefix)"
         robot_ip="$(arg robot_ip)"
         robot_model_parameters_file="$(arg robot_model_parameters_file)"
+        joint_limits_parameters_file="$(arg joint_limits_parameters_file)"
         initial_positions_file="$(arg initial_positions_file)"
         use_mock_hardware="$(arg use_mock_hardware)"
         mock_sensor_commands="$(arg mock_sensor_commands)"

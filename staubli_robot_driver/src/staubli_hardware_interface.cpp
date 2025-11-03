@@ -76,6 +76,7 @@ const hardware_interface::HardwareComponentInterfaceParams & params)
     hw_joint_efforts_.resize(num_joints_, 0.0);
     hw_joint_position_commands_.resize(num_joints_, 0.0);
     hw_joint_velocity_commands_.resize(num_joints_, 0.0);
+    hw_joint_acceleration_commands_.resize(num_joints_, 0.0);
     hw_joint_effort_commands_.resize(num_joints_, 0.0);
     std::fill(
         hw_joint_position_commands_.begin(),
@@ -84,6 +85,10 @@ const hardware_interface::HardwareComponentInterfaceParams & params)
     std::fill(
         hw_joint_velocity_commands_.begin(),
         hw_joint_velocity_commands_.end(),
+        std::numeric_limits<double>::quiet_NaN());
+    std::fill(
+        hw_joint_effort_commands_.begin(),
+        hw_joint_effort_commands_.end(),
         std::numeric_limits<double>::quiet_NaN());
     std::fill(
         hw_joint_effort_commands_.begin(),
@@ -309,6 +314,10 @@ StaubliHardwareInterface::export_command_interfaces()
       joint_info.name, hardware_interface::HW_IF_VELOCITY, &hw_joint_velocity_commands_[i]));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      joint_info.name, hardware_interface::HW_IF_ACCELERATION,
+        &hw_joint_acceleration_commands_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
       joint_info.name, hardware_interface::HW_IF_EFFORT, &hw_joint_effort_commands_[i]));
   }
 
@@ -409,7 +418,6 @@ hardware_interface::return_type StaubliHardwareInterface::write(
         cmd_msg.analog_outputs[i] = hw_analog_output_commands_[i];
     }
 
-
     // Check for NaN joint commands
     bool found_nan = false;
     for (size_t i = 0; i < num_joints_; ++i) {
@@ -443,16 +451,19 @@ hardware_interface::return_type StaubliHardwareInterface::prepare_command_mode_s
     CommandType new_mode = CommandType::STOP;
 
     for (const auto& interface : start_interfaces) {
-    if (interface.find("position") != std::string::npos) {
-        new_mode = CommandType::JOINT_POSITION;
-        break;
-    } else if (interface.find("velocity") != std::string::npos) {
-        new_mode = CommandType::JOINT_VELOCITY;
-        break;
-    } else if (interface.find("effort") != std::string::npos) {
-        new_mode = CommandType::JOINT_TORQUE;
-        break;
-    }
+        if (interface.find("position") != std::string::npos) {
+            new_mode = CommandType::JOINT_POSITION;
+            break;
+        } else if (interface.find("velocity") != std::string::npos) {
+            new_mode = CommandType::JOINT_VELOCITY;
+            break;
+        } else if (interface.find("effort") != std::string::npos) {
+            new_mode = CommandType::JOINT_TORQUE;
+            break;
+        } else if (interface.find("acceleration") != std::string::npos) {
+            RCLCPP_WARN(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Preparing to switch to unsupported control mode ACCELERATION, will be rejected!");
+        }
     }
 
     RCLCPP_INFO(
@@ -472,18 +483,23 @@ hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_s
     for (const auto& interface : start_interfaces) {
         if (interface.find("position") != std::string::npos) {
             new_mode = CommandType::JOINT_POSITION;
-            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
                 "Switched to JOINT_POSITION mode");
             break;
         } else if (interface.find("velocity") != std::string::npos) {
             new_mode = CommandType::JOINT_VELOCITY;
-            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
                 "Switched to JOINT_VELOCITY mode");
             break;
         } else if (interface.find("effort") != std::string::npos) {
             new_mode = CommandType::JOINT_TORQUE;
-            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
                 "Switched to JOINT_TORQUE mode");
+            break;
+        } else if (interface.find("acceleration") != std::string::npos) {
+            new_mode = CommandType::INVALID;  // Will fallback to STOP
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Switching to ACCELERATION control mode is not supported! Switch rejected.");
             break;
         }
     }
@@ -492,7 +508,6 @@ hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_s
     hw_joint_position_commands_ = hw_joint_positions_;
     std::fill(hw_joint_velocity_commands_.begin(), hw_joint_velocity_commands_.end(), 0.0);
     std::fill(hw_joint_effort_commands_.begin(), hw_joint_effort_commands_.end(), 0.0);
-
 
     current_control_mode_ = new_mode;
 
