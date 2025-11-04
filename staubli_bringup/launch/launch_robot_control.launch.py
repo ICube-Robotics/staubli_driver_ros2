@@ -20,15 +20,14 @@ from launch.actions import (
     ExecuteProcess,
     LogInfo,
     RegisterEventHandler,
-    TimerAction,
 )
 from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessStart
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     Command,
+    EqualsSubstitution,
     FindExecutable,
     LaunchConfiguration,
-    NotEqualsSubstitution,
     PathJoinSubstitution,
 )
 from launch_ros.actions import Node
@@ -151,6 +150,8 @@ def generate_launch_description():
 
     # Load controllers
     load_controllers = []
+
+    # Always load and activate joint state broadcaster
     load_controllers += [
         Node(
             package="controller_manager",
@@ -158,22 +159,57 @@ def generate_launch_description():
             arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
         )
     ]
-    # Add other controllers here, inactive at startup
-    for controller in [
+
+    # Add your controllers here
+    controllers_to_load = [
         "joint_trajectory_controller",
-    ]:
-        load_controllers += [
-            Node(
-                package="controller_manager",
-                executable="spawner",
-                arguments=[
-                    controller,
-                    "--controller-manager",
-                    "/controller_manager",
-                    "--inactive",
+    ]
+
+    def load_controller_cmd(controller_name: str):
+        # Spawn controller, inactive by default
+        load_node = Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=[
+                controller_name,
+                "--controller-manager",
+                "/controller_manager",
+                "--inactive",
+            ],
+        )
+        # Activate controller if specified at launch
+        activation_condition = IfCondition(
+            EqualsSubstitution(LaunchConfiguration("start_controller"), controller_name)
+        )
+        post_load_action = RegisterEventHandler(
+            OnProcessExit(
+                target_action=load_node,
+                on_exit=[
+                    LogInfo(
+                        condition=activation_condition,
+                        msg=[
+                            "\033[32mStarting controller ",
+                            controller_name,
+                            "\033[0m",
+                        ],
+                    ),
+                    ExecuteProcess(
+                        condition=activation_condition,
+                        cmd=[
+                            "ros2",
+                            "control",
+                            "set_controller_state",
+                            controller_name,
+                            "active",
+                        ],
+                    ),
                 ],
             )
-        ]
+        )
+        return [load_node, post_load_action]
+
+    for controller in controllers_to_load:
+        load_controllers += load_controller_cmd(controller)
 
     # Rviz
     rviz_config_file = PathJoinSubstitution(
@@ -187,43 +223,6 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
         condition=IfCondition(LaunchConfiguration("gui")),
     )
-
-    # Start controller when control_node starts, with a delay for initialization
-    start_controller_cmd = ExecuteProcess(
-        cmd=[
-            "ros2",
-            "control",
-            "set_controller_state",
-            LaunchConfiguration("start_controller"),
-            "active",
-        ],
-        output="screen",
-    )
-
-    start_controller = RegisterEventHandler(
-        OnProcessStart(
-            target_action=control_node,
-            on_start=[
-                TimerAction(
-                    period=2.0,  # Wait a bit after controller manager starts
-                    actions=[
-                        LogInfo(
-                            msg=[
-                                "\033[32mStarting controller ",
-                                LaunchConfiguration("start_controller"),
-                                "\033[0m",
-                            ]
-                        ),
-                        start_controller_cmd,
-                    ],
-                    condition=IfCondition(
-                        NotEqualsSubstitution(LaunchConfiguration("start_controller"), "none")
-                    ),
-                )
-            ],
-        )
-    )
-
     # Launch description
     nodes = [
         robot_state_publisher_node,
@@ -231,4 +230,4 @@ def generate_launch_description():
         rviz_node,
     ]
 
-    return LaunchDescription(declared_arguments + nodes + load_controllers + [start_controller])
+    return LaunchDescription(declared_arguments + nodes + load_controllers)

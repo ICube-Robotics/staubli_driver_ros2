@@ -24,8 +24,13 @@ from ament_index_python.packages import get_package_share_directory
 
 import pytest
 
+ROBOT_MODELS = [
+    "tx2_60l",
+    # Add other robot models here as needed
+]
 
-@pytest.mark.parametrize("robot_model", ["tx2_60l"])
+
+@pytest.mark.parametrize("robot_model", ROBOT_MODELS)
 @pytest.mark.parametrize("prefix", ["", "staubli_"])
 @pytest.mark.parametrize("use_mock_hardware", [True, False])
 def test_urdf_xacro(robot_model, prefix, use_mock_hardware):
