@@ -33,6 +33,7 @@ def generate_launch_description():
             choices=[
                 "tx2_60l",
             ],
+            default_value="tx2_60l",
         )
     )
 

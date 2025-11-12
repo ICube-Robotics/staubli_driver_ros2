@@ -97,19 +97,17 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Wait for robot description node
-    wait_for_robot_description = Node(
+    # Wait for robot description and joint states topics
+    wait_for_robot_ready = Node(
         package="staubli_bringup",
-        executable="wait_for_robot_description.py",
-        name="wait_for_robot_description",
+        executable="wait_for_robot_ready.py",
+        name="wait_for_robot_ready",
         output="both",
     )
 
     # Launch MoveIt when robot description becomes available
     launch_moveit_when_ready = RegisterEventHandler(
-        OnProcessExit(target_action=wait_for_robot_description, on_exit=[launch_moveit])
+        OnProcessExit(target_action=wait_for_robot_ready, on_exit=[launch_moveit])
     )
 
-    return LaunchDescription(
-        declared_arguments + [wait_for_robot_description, launch_moveit_when_ready]
-    )
+    return LaunchDescription(declared_arguments + [wait_for_robot_ready, launch_moveit_when_ready])

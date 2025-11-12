@@ -148,17 +148,15 @@ def generate_launch_description():
         output="both",
     )
 
-    # Load controllers
-    load_controllers = []
-
     # Always load and activate joint state broadcaster
-    load_controllers += [
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        )
-    ]
+    load_joint_state_broadcaster = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+
+    # Load controllers
+    load_controllers = [load_joint_state_broadcaster]
 
     # Add your controllers here
     controllers_to_load = [

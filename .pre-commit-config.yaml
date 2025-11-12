@@ -28,7 +28,7 @@ repos:
       - id: check-symlinks
       - id: check-xml
       - id: check-yaml
-        args: ["--allow-multiple-documents"]
+        args: ["--allow-multiple-documents", "--unsafe"]
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending

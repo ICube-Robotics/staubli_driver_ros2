@@ -14,7 +14,7 @@ install(
 )
 
 install(PROGRAMS
-  scripts/wait_for_robot_description.py
+  scripts/wait_for_robot_ready.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
