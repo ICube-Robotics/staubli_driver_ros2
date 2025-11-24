@@ -104,9 +104,7 @@ public:
     bool motion_possible = false;
     bool in_motion = false;
     bool error_state = false;
-    bool wait_for_error_reset = false;
     bool estop_pressed = false;
-    bool protective_stop = false;
 
     // Valid fields flags
     bool has_joint_positions = false;

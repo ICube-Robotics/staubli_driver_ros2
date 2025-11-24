@@ -65,10 +65,7 @@ bool RobotStateMessage::serialize(uint8_t* buffer, size_t buffer_size) const
     if (motion_possible) status_flags |= static_cast<uint16_t>(StatusFlag::MOTION_POSSIBLE);
     if (in_motion)       status_flags |= static_cast<uint16_t>(StatusFlag::IN_MOTION);
     if (error_state)     status_flags |= static_cast<uint16_t>(StatusFlag::ERROR_STATE);
-    if (wait_for_error_reset) status_flags |= \
-        static_cast<uint16_t>(StatusFlag::WAIT_FOR_ERROR_RESET);
     if (estop_pressed)   status_flags |= static_cast<uint16_t>(StatusFlag::ESTOP_PRESSED);
-    if (protective_stop) status_flags |= static_cast<uint16_t>(StatusFlag::PROTECTIVE_STOP);
 
     // Assemble valid fields flags
     uint16_t valid_fields_flags = 0;
@@ -166,10 +163,7 @@ bool RobotStateMessage::deserialize(uint8_t* buffer, size_t buffer_size)
     motion_possible     = (status_flags & static_cast<uint16_t>(StatusFlag::MOTION_POSSIBLE)) != 0;
     in_motion           = (status_flags & static_cast<uint16_t>(StatusFlag::IN_MOTION)) != 0;
     error_state         = (status_flags & static_cast<uint16_t>(StatusFlag::ERROR_STATE)) != 0;
-    wait_for_error_reset = \
-        (status_flags & static_cast<uint16_t>(StatusFlag::WAIT_FOR_ERROR_RESET)) != 0;
     estop_pressed       = (status_flags & static_cast<uint16_t>(StatusFlag::ESTOP_PRESSED)) != 0;
-    protective_stop     = (status_flags & static_cast<uint16_t>(StatusFlag::PROTECTIVE_STOP)) != 0;
 
     uint16_t valid_fields_flags;
     offset += deserialize_type(buffer + offset, valid_fields_flags);

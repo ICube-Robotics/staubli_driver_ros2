@@ -91,9 +91,7 @@ TEST_F(MessageSerializationTest, RobotStateMessageSerializationDeserialization) 
   original_msg.motion_possible = true;
   original_msg.in_motion = false;
   original_msg.error_state = false;
-  original_msg.wait_for_error_reset = false;
   original_msg.estop_pressed = false;
-  original_msg.protective_stop = false;
 
   // Set valid fields flags
   original_msg.has_joint_positions = true;
@@ -144,9 +142,7 @@ TEST_F(MessageSerializationTest, RobotStateMessageSerializationDeserialization) 
   EXPECT_EQ(original_msg.motion_possible, deserialized_msg.motion_possible);
   EXPECT_EQ(original_msg.in_motion, deserialized_msg.in_motion);
   EXPECT_EQ(original_msg.error_state, deserialized_msg.error_state);
-  EXPECT_EQ(original_msg.wait_for_error_reset, deserialized_msg.wait_for_error_reset);
   EXPECT_EQ(original_msg.estop_pressed, deserialized_msg.estop_pressed);
-  EXPECT_EQ(original_msg.protective_stop, deserialized_msg.protective_stop);
 
   // Verify valid fields flags
   EXPECT_EQ(original_msg.has_joint_positions, deserialized_msg.has_joint_positions);

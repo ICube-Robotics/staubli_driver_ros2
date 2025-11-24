@@ -72,7 +72,7 @@
             <state_interface name="safety_status"/>
             <state_interface name="control_sequence_delay"/>
             <!-- Booleans -->
-            <state_interface name="power_on"/>
+            <state_interface name="brakes_released"/>
             <state_interface name="motion_possible"/>
             <state_interface name="in_motion"/>
             <state_interface name="in_error"/>

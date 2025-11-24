@@ -99,7 +99,7 @@ private:
         double safety_status;
         double control_sequence_delay;
         // Bool values
-        double power_on;
+        double brakes_released;
         double motion_possible;
         double in_motion;
         double in_error;

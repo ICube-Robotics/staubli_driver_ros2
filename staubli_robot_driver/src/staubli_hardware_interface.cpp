@@ -287,8 +287,8 @@ std::vector<hardware_interface::StateInterface> StaubliHardwareInterface::export
         &supervision_gpio_copy_.control_sequence_delay));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface(
-        gpio_supervision_prefix, "power_on",
-        &supervision_gpio_copy_.power_on));
+        gpio_supervision_prefix, "brakes_released",
+        &supervision_gpio_copy_.brakes_released));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface(
         gpio_supervision_prefix, "motion_possible",
@@ -534,17 +534,13 @@ hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_s
         if (interface.find("position") != std::string::npos) {
             new_mode = CommandType::JOINT_POSITION;
             RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Switched to JOINT_POSITION mode");
+                "Switching to JOINT_POSITION mode");
             break;
         } else if (interface.find("velocity") != std::string::npos) {
-            new_mode = CommandType::JOINT_VELOCITY;
-            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Switched to JOINT_VELOCITY mode");
-            break;
-        } else if (interface.find("effort") != std::string::npos) {
-            new_mode = CommandType::JOINT_TORQUE;
-            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Switched to JOINT_TORQUE mode");
+            // new_mode = CommandType::JOINT_VELOCITY;
+            new_mode = CommandType::INVALID;  // Will fallback to STOP
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Switching to VELOCITY control mode is not (yet) supported! Switch rejected.");
             break;
         } else if (interface.find("acceleration") != std::string::npos) {
             new_mode = CommandType::INVALID;  // Will fallback to STOP
@@ -558,6 +554,30 @@ hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_s
     hw_joint_position_commands_ = hw_joint_positions_;
     std::fill(hw_joint_velocity_commands_.begin(), hw_joint_velocity_commands_.end(), 0.0);
     std::fill(hw_joint_acceleration_commands_.begin(), hw_joint_acceleration_commands_.end(), 0.0);
+
+
+    if (new_mode != CommandType::STOP && new_mode != CommandType::INVALID) {
+        // Check that the robot is not in error state
+        if (state_msg_.error_state) {
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Cannot switch control mode, robot is in error state!");
+            current_control_mode_ = CommandType::STOP;
+            return hardware_interface::return_type::ERROR;
+        }
+        // Check that motion is possible
+        if (!state_msg_.motion_possible) {
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Cannot switch control mode, robot brakes engaged!");
+            current_control_mode_ = CommandType::STOP;
+            return hardware_interface::return_type::ERROR;
+        }
+        // Ideally, the robot is not on hold
+        if (state_msg_.operation_mode_status != 0) {
+            RCLCPP_WARN(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Robot is on HOLD! ensure robot is enabled (\"play\" button)"
+                " before commanding motion...");
+        }
+    }
 
     current_control_mode_ = new_mode;
 
@@ -624,13 +644,11 @@ bool StaubliHardwareInterface::update_state(const RobotStateMessage& state_msg)
         static_cast<double>(state_msg.operation_mode_status);
     supervision_gpio_copy_.safety_status = static_cast<double>(state_msg.safety_status);
     supervision_gpio_copy_.control_sequence_delay = static_cast<double>(state_msg.sequence_delay);
-    supervision_gpio_copy_.power_on = state_msg.brakes_released ? 1.0 : 0.0;
-    supervision_gpio_copy_.motion_possible = state_msg.motion_possible ? 1.0 : 0.0;
-    supervision_gpio_copy_.in_motion = state_msg.in_motion ? 1.0 : 0.0;
-    supervision_gpio_copy_.in_error = state_msg.error_state ? 1.0 : 0.0;
-    supervision_gpio_copy_.estop_pressed = state_msg.estop_pressed ? 1.0 : 0.0;
-    supervision_gpio_copy_.wait_for_ack = state_msg.wait_for_error_reset ? 1.0 : 0.0;
-
+    supervision_gpio_copy_.brakes_released = static_cast<double>(state_msg.brakes_released);
+    supervision_gpio_copy_.motion_possible = static_cast<double>(state_msg.motion_possible);
+    supervision_gpio_copy_.in_motion = static_cast<double>(state_msg.in_motion);
+    supervision_gpio_copy_.in_error = static_cast<double>(state_msg.error_state);
+    supervision_gpio_copy_.estop_pressed = static_cast<double>(state_msg.estop_pressed);
     return true;
 }
 

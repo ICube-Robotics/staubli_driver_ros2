@@ -88,9 +88,7 @@ enum class StatusFlag : uint16_t {
     MOTION_POSSIBLE = 0x0004,
     IN_MOTION = 0x0008,
     ERROR_STATE = 0x0010,
-    WAIT_FOR_ERROR_RESET = 0x0020,
-    ESTOP_PRESSED = 0x0040,
-    PROTECTIVE_STOP = 0x0080,
+    ESTOP_PRESSED = 0x0020,
 };
 
 /**

@@ -59,11 +59,63 @@
     return
   endIf
 
-  // Generate flag bitmasks (uint16_t)
-  // TODO
+  // Generate status flags bitmask (16 bits max)
   l_nStatusFlags = 0
+  if (x_msg.robotState.bDrivePowered)
+    // Bit 0
+    l_nStatusFlags = bOr(l_nStatusFlags, 1)
+  endIf
+  if (x_msg.robotState.bBrakeReleased)
+    // Bit 1
+    l_nStatusFlags = bOr(l_nStatusFlags, 2)
+  endIf
+  if (x_msg.robotState.bMotionPossible)
+    // Bit 2
+    l_nStatusFlags = bOr(l_nStatusFlags, 4)
+  endIf
+  if (x_msg.robotState.bInMotion)
+    // Bit 3
+    l_nStatusFlags = bOr(l_nStatusFlags, 8)
+  endIf
+  if (x_msg.robotState.bInError)
+    // Bit 4
+    l_nStatusFlags = bOr(l_nStatusFlags, 16)
+  endIf
+  if (x_msg.robotState.bEStopped)
+    // Bit 5
+    l_nStatusFlags = bOr(l_nStatusFlags, 32)
+  endIf
+
+  // Generate valid field flags bitmask (16 bits max)
   l_nValidFieldFlags = 0
+  // Joint positions (always present)
+  if (x_msg.robotState.bValidPosition)
+    l_nValidFieldFlags = bOr(l_nValidFieldFlags, 1)
+  endIf
+  // Joint velocities (opt.)
+  if (x_msg.robotState.bValidVelocity)
+    l_nValidFieldFlags = bOr(l_nValidFieldFlags, 2)
+  endIf
+  // Joint torques (opt.)
+  if (x_msg.robotState.bValidTorque)
+    l_nValidFieldFlags = bOr(l_nValidFieldFlags, 4)
+  endIf
+  // FT sensor values (opt.)
+  if (x_msg.robotState.bValidFtSensor)
+    l_nValidFieldFlags = bOr(l_nValidFieldFlags, 8)
+  endIf
+  // Digital inputs (opt.)
+  if (x_msg.robotState.bValidDigitalInputs)
+    l_nValidFieldFlags = bOr(l_nValidFieldFlags, 16)
+  endIf
+  // Analog inputs (opt.)
+  if (x_msg.robotState.bValidAnalogInputs)
+    l_nValidFieldFlags = bOr(l_nValidFieldFlags, 32)
+  endIf
+
+  // Digital inputs (opt.)
   l_nDigitalInputFlags = 0
+  // TODO: implement when needed
 
   // Serialization
   // uint8_t   <-> "1" Unsigned byte
