@@ -119,7 +119,6 @@ private:
     // Joint commands
     std::vector<double> hw_joint_position_commands_;  ///< Current joint position commands
     std::vector<double> hw_joint_velocity_commands_;  ///< Current joint velocity commands
-    std::vector<double> hw_joint_effort_commands_;    ///< Current joint effort commands
 
     /**
      * @brief Current joint acceleration commands

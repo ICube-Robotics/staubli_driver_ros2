@@ -132,11 +132,11 @@ public:
 
     /**
      * @brief Set the staleness timeout after which the robot state is considered stale
-     * @param staleness_timeout Timeout for staleness check; default is 10 ms.
+     * @param staleness_timeout Timeout for staleness check; default is 100 ms.
      * @return True if timeout was set successfully, false otherwise
      */
     void set_state_staleness_timeout(
-        rclcpp::Duration staleness_timeout = rclcpp::Duration(0, 1e7));
+        rclcpp::Duration staleness_timeout = rclcpp::Duration(0, 1e8));
 
     /**
      * @brief Set the staleness timeout after which the diagnostic data is considered stale

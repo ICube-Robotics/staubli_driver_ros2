@@ -80,7 +80,6 @@ const hardware_interface::HardwareComponentInterfaceParams & params)
     hw_joint_position_commands_.resize(num_joints_, 0.0);
     hw_joint_velocity_commands_.resize(num_joints_, 0.0);
     hw_joint_acceleration_commands_.resize(num_joints_, 0.0);
-    hw_joint_effort_commands_.resize(num_joints_, 0.0);
     std::fill(
         hw_joint_position_commands_.begin(),
         hw_joint_position_commands_.end(),
@@ -90,21 +89,47 @@ const hardware_interface::HardwareComponentInterfaceParams & params)
         hw_joint_velocity_commands_.end(),
         std::numeric_limits<double>::quiet_NaN());
     std::fill(
-        hw_joint_effort_commands_.begin(),
-        hw_joint_effort_commands_.end(),
-        std::numeric_limits<double>::quiet_NaN());
-    std::fill(
-        hw_joint_effort_commands_.begin(),
-        hw_joint_effort_commands_.end(),
+        hw_joint_acceleration_commands_.begin(),
+        hw_joint_acceleration_commands_.end(),
         std::numeric_limits<double>::quiet_NaN());
 
     // Initialize GPIO vectors (max : 16 x 2 digital IOs, 4 analog IOs for Staubli robots)
-    hw_digital_inputs_.reserve(MAX_DIGITAL_IO);
-    hw_digital_outputs_.reserve(MAX_DIGITAL_IO);
-    hw_digital_output_commands_.reserve(MAX_DIGITAL_IO);
-    hw_analog_inputs_.reserve(MAX_ANALOG_IO);
-    hw_analog_outputs_.reserve(MAX_ANALOG_IO);
-    hw_analog_output_commands_.reserve(MAX_ANALOG_IO);
+    size_t num_digital_inputs = 0;
+    size_t num_digital_outputs = 0;
+    size_t num_analog_inputs = 0;
+    size_t num_analog_outputs = 0;
+    try {
+        num_digital_inputs = std::stoul(info_.hardware_parameters["num_digital_inputs"]);
+        num_digital_outputs = std::stoul(info_.hardware_parameters["num_digital_outputs"]);
+        num_analog_inputs = std::stoul(info_.hardware_parameters["num_analog_inputs"]);
+        num_analog_outputs = std::stoul(info_.hardware_parameters["num_analog_outputs"]);
+    } catch (const std::exception& e) {
+        RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
+            "Failed to parse hardware parameters: %s", e.what());
+        return hardware_interface::CallbackReturn::ERROR;
+    }
+
+    // Resize IO if needed
+    RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
+        "Configuring with %zu digital inputs, %zu digital outputs, "
+        "%zu analog inputs, %zu analog outputs",
+        num_digital_inputs, num_digital_outputs, num_analog_inputs, num_analog_outputs);
+
+    if (num_digital_inputs > MAX_DIGITAL_IO ||
+        num_digital_outputs > MAX_DIGITAL_IO ||
+        num_analog_inputs > MAX_ANALOG_IO ||
+        num_analog_outputs > MAX_ANALOG_IO) {
+        RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
+            "Number of IO exceeds maximum allowed!");
+        return hardware_interface::CallbackReturn::ERROR;
+    }
+    hw_digital_inputs_.resize(num_digital_inputs, 0.0);
+    hw_digital_outputs_.resize(num_digital_outputs, 0.0);
+    hw_digital_output_commands_.resize(num_digital_outputs, 0.0);
+    hw_analog_inputs_.resize(num_analog_inputs, 0.0);
+    hw_analog_outputs_.resize(num_analog_outputs, 0.0);
+    hw_analog_output_commands_.resize(num_analog_outputs, 0.0);
+
     // Create robot driver
     robot_driver_ = std::make_shared<RobotDriver>();
 
@@ -122,62 +147,15 @@ hardware_interface::CallbackReturn StaubliHardwareInterface::on_configure(
     int diagnostic_port = 0;
     int local_control_port = 0;
     int local_diagnostic_port = 0;
-
-    size_t num_digital_inputs = 0;
-    size_t num_digital_outputs = 0;
-    size_t num_analog_inputs = 0;
-    size_t num_analog_outputs = 0;
     try {
         robot_ip = info_.hardware_parameters.at("robot_ip");
         control_port = std::stoi(info_.hardware_parameters["control_port"]);
         diagnostic_port = std::stoi(info_.hardware_parameters["diagnostic_port"]);
         local_control_port = std::stoi(info_.hardware_parameters["local_control_port"]);
         local_diagnostic_port = std::stoi(info_.hardware_parameters["local_diagnostic_port"]);
-
-        num_digital_inputs = std::stoul(info_.hardware_parameters["num_digital_inputs"]);
-        num_digital_outputs = std::stoul(info_.hardware_parameters["num_digital_outputs"]);
-        num_analog_inputs = std::stoul(info_.hardware_parameters["num_analog_inputs"]);
-        num_analog_outputs = std::stoul(info_.hardware_parameters["num_analog_outputs"]);
     } catch (const std::exception& e) {
         RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
             "Failed to parse hardware parameters: %s", e.what());
-        return hardware_interface::CallbackReturn::ERROR;
-    }
-
-    // Resize IO if needed
-    RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
-        "Configuring with %zu digital inputs, %zu digital outputs, "
-        "%zu analog inputs, %zu analog outputs",
-        num_digital_inputs, num_digital_outputs, num_analog_inputs, num_analog_outputs);
-
-    if (num_digital_inputs <= MAX_DIGITAL_IO) {
-        hw_digital_inputs_.resize(num_digital_inputs, 0.0);
-    } else {
-        RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
-            "Number of digital inputs exceeds %zu!", MAX_DIGITAL_IO);
-        return hardware_interface::CallbackReturn::ERROR;
-    }
-    if (num_digital_outputs <= MAX_DIGITAL_IO) {
-        hw_digital_outputs_.resize(num_digital_outputs, 0.0);
-        hw_digital_output_commands_.resize(num_digital_outputs, 0.0);
-    } else {
-        RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
-            "Number of digital outputs exceeds %zu!", MAX_DIGITAL_IO);
-        return hardware_interface::CallbackReturn::ERROR;
-    }
-    if (num_analog_inputs <= MAX_ANALOG_IO) {
-        hw_analog_inputs_.resize(num_analog_inputs, 0.0);
-    } else {
-        RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
-            "Number of analog inputs exceeds %zu!", MAX_ANALOG_IO);
-        return hardware_interface::CallbackReturn::ERROR;
-    }
-    if (num_analog_outputs <= MAX_ANALOG_IO) {
-        hw_analog_outputs_.resize(num_analog_outputs, 0.0);
-        hw_analog_output_commands_.resize(num_analog_outputs, 0.0);
-    } else {
-        RCLCPP_FATAL(rclcpp::get_logger("StaubliHardwareInterface"),
-            "Number of analog outputs exceeds %zu!", MAX_ANALOG_IO);
         return hardware_interface::CallbackReturn::ERROR;
     }
 
@@ -378,7 +356,7 @@ StaubliHardwareInterface::export_command_interfaces()
         "Failed to get robot_prefix parameter: %s", e.what());
   }
 
-  // Export joint command interfaces (position, velocity, effort)
+  // Export joint command interfaces (position & velocity)
   for (size_t i = 0; i < num_joints_; ++i) {
     const auto & joint_info = info_.joints[i];
 
@@ -388,12 +366,10 @@ StaubliHardwareInterface::export_command_interfaces()
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       joint_info.name, hardware_interface::HW_IF_VELOCITY, &hw_joint_velocity_commands_[i]));
 
+    // TODO(anyone): remove once acc. limits from r2c config are supported
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       joint_info.name, hardware_interface::HW_IF_ACCELERATION,
         &hw_joint_acceleration_commands_[i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      joint_info.name, hardware_interface::HW_IF_EFFORT, &hw_joint_effort_commands_[i]));
   }
 
   // Export GPIO command interfaces
@@ -475,11 +451,6 @@ hardware_interface::return_type StaubliHardwareInterface::write(
         // Velocity commands
         for (size_t i = 0; i < num_joints_ && i < 6; ++i) {
             cmd_msg.command_reference[i] = rad2deg(hw_joint_velocity_commands_[i]);
-        }
-    } else if (cmd_msg.command_type == CommandType::JOINT_TORQUE) {
-        // Effort commands
-        for (size_t i = 0; i < num_joints_ && i < 6; ++i) {
-            cmd_msg.command_reference[i] = hw_joint_effort_commands_[i];
         }
     } else {
         RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
@@ -586,7 +557,7 @@ hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_s
     // Initialize commands
     hw_joint_position_commands_ = hw_joint_positions_;
     std::fill(hw_joint_velocity_commands_.begin(), hw_joint_velocity_commands_.end(), 0.0);
-    std::fill(hw_joint_effort_commands_.begin(), hw_joint_effort_commands_.end(), 0.0);
+    std::fill(hw_joint_acceleration_commands_.begin(), hw_joint_acceleration_commands_.end(), 0.0);
 
     current_control_mode_ = new_mode;
 

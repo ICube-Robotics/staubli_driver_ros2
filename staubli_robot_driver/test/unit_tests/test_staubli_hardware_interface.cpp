@@ -134,27 +134,19 @@ TEST_F(StaubliHardwareInterfaceTest, PluginLoadingAndInitialization)
  */
 TEST_F(StaubliHardwareInterfaceTest, InterfaceExport)
 {
-  // Start mock robot
-  ASSERT_TRUE(start_mock_robot());
-  rclcpp::sleep_for(std::chrono::milliseconds(100));
-
   // Initialize & configure
   auto hardware_interface = std::make_unique<StaubliHardwareInterface>();
   auto params = createParams();
   auto init_result = hardware_interface->on_init(params);
   ASSERT_EQ(init_result, hardware_interface::CallbackReturn::SUCCESS);
 
-  rclcpp_lifecycle::State previous_state;
-  auto config_result = hardware_interface->on_configure(previous_state);
-  ASSERT_EQ(config_result, hardware_interface::CallbackReturn::SUCCESS);
-
   // Export command interfaces
   auto command_interfaces = hardware_interface->export_command_interfaces();
-  // 6 joints * [ 4 : 3 interfaces (pos,vel,eff) + 1 interface for ACC (limits only) ]
+  // 6 joints * [ 4 : 2 interfaces (pos & vel) + 1 interface for ACC (limits only) ]
   // + 16 digital outputs + 2 analog outputs = 42
-  EXPECT_EQ(command_interfaces.size(), 42);
+  EXPECT_EQ(command_interfaces.size(), 36);
 
-  if (command_interfaces.size() != 42) {
+  if (command_interfaces.size() != 36) {
     std::cerr << "Command interfaces:" << std::endl;
     for (const auto& interface : command_interfaces) {
       std::cerr << " - " << interface.get_name() << std::endl;
@@ -230,9 +222,6 @@ TEST_F(StaubliHardwareInterfaceTest, InterfaceExport)
   EXPECT_TRUE(found_operation_mode);
   EXPECT_TRUE(found_operation_mode_status);
   EXPECT_TRUE(found_safety_status);
-
-  // Stop mock robot
-  stop_mock_robot();
 }
 
 /**
