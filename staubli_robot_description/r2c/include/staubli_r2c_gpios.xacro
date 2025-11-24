@@ -9,25 +9,28 @@
         num_analog_outputs
     ">
 
-    <xacro:macro name="add_numbered_gpios" params="robot_prefix:=^ interface_name_prefix num_gpios cmd:=false cmd_feedback:= false state:=false current_idx=0" >
+    <xacro:macro name="add_numbered_gpios" params="robot_prefix:=^ interface_name_prefix num_gpios cmd:=false state:=false current_idx=0" >
         <xacro:if value="${current_idx != num_gpios}">
             <xacro:property name="gpio_name" value="${interface_name_prefix}${current_idx}"/>
-            <state_interface name="${gpio_name}">
-                <param name="initial_value">0.0</param>
-            </state_interface>
+            <xacro:if value="${cmd}">
+                <command_interface name="${gpio_name}"/>
+            </xacro:if>
+            <xacro:if value="${state}">
+                <state_interface name="${gpio_name}"/>
+            </xacro:if>
+            <!-- Recursive call -->
             <xacro:add_numbered_gpios
                 robot_prefix="${robot_prefix}"
                 interface_name_prefix="${interface_name_prefix}"
                 num_gpios="${num_gpios}"
                 cmd="${cmd}"
-                cmd_feedback="${cmd_feedback}"
                 state="${state}"
                 current_idx="${current_idx + 1}"/>
         </xacro:if>
     </xacro:macro>
 
 
-    <gpio name="${robot_prefix}gpios">
+    <gpio name="${robot_prefix}gpio">
 
         <!-- Digital GPIOs -->
 
@@ -37,7 +40,6 @@
             num_gpios="${num_digital_inputs}"
             state="true"
             cmd="false"
-            cmd_feedback="false"
         />
 
         <xacro:add_numbered_gpios
@@ -46,7 +48,6 @@
             num_gpios="${num_digital_outputs}"
             state="false"
             cmd="true"
-            cmd_feedback="false"
         />
 
         <!-- Analog GPIOs -->
@@ -57,7 +58,6 @@
             num_gpios="${num_analog_inputs}"
             state="true"
             cmd="false"
-            cmd_feedback="false"
         />
 
         <xacro:add_numbered_gpios
@@ -66,7 +66,6 @@
             num_gpios="${num_analog_outputs}"
             state="false"
             cmd="true"
-            cmd_feedback="false"
         />
 
     </gpio>

@@ -93,6 +93,23 @@ private:
     /// Enum defining the current control mode
     CommandType current_control_mode_;
 
+    struct SupervisionGpio {
+        double operation_mode;
+        double operation_mode_status;
+        double safety_status;
+        double control_sequence_delay;
+        // Bool values
+        double power_on;
+        double motion_possible;
+        double in_motion;
+        double in_error;
+        double estop_pressed;
+        double wait_for_ack;
+    };
+
+    // Copy of supervision GPIO for state interface
+    SupervisionGpio supervision_gpio_copy_;
+
     // Joint state
     size_t num_joints_;  ///< Number of joints
     std::vector<double> hw_joint_positions_;  ///< Current joint positions
@@ -103,6 +120,7 @@ private:
     std::vector<double> hw_joint_position_commands_;  ///< Current joint position commands
     std::vector<double> hw_joint_velocity_commands_;  ///< Current joint velocity commands
     std::vector<double> hw_joint_effort_commands_;    ///< Current joint effort commands
+
     /**
      * @brief Current joint acceleration commands
      *

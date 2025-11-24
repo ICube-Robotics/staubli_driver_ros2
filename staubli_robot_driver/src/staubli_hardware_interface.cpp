@@ -260,6 +260,8 @@ std::vector<hardware_interface::StateInterface> StaubliHardwareInterface::export
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
+  const std::string robot_prefix = info_.hardware_parameters.at("robot_prefix");
+
   // Export joint state interfaces
   for (size_t i = 0; i < num_joints_; ++i) {
     const auto & joint_info = info_.joints[i];
@@ -274,27 +276,79 @@ std::vector<hardware_interface::StateInterface> StaubliHardwareInterface::export
       joint_info.name, hardware_interface::HW_IF_EFFORT, &hw_joint_efforts_[i]));
   }
 
+  // Export supervision GPIO state interfaces
+  const std::string gpio_supervision_prefix = robot_prefix + "supervision";
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "operation_mode",
+        &supervision_gpio_copy_.operation_mode));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "operation_mode_status",
+        &supervision_gpio_copy_.operation_mode_status));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "safety_status",
+        &supervision_gpio_copy_.safety_status));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "control_sequence_delay",
+        &supervision_gpio_copy_.control_sequence_delay));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "power_on",
+        &supervision_gpio_copy_.power_on));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "motion_possible",
+        &supervision_gpio_copy_.motion_possible));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "in_motion",
+        &supervision_gpio_copy_.in_motion));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "in_error",
+        &supervision_gpio_copy_.in_error));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "estop_pressed",
+        &supervision_gpio_copy_.estop_pressed));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+        gpio_supervision_prefix, "wait_for_ack",
+        &supervision_gpio_copy_.wait_for_ack));
+
   // Export GPIO state interfaces
   for (size_t i = 0; i < hw_digital_inputs_.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      "digital_input_" + std::to_string(i), "digital_input", &hw_digital_inputs_[i]));
+      robot_prefix + "gpio",
+      "digital_input_" + std::to_string(i), &hw_digital_inputs_[i]
+    ));
   }
 
   for (size_t i = 0; i < hw_analog_inputs_.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      "analog_input_" + std::to_string(i), "analog_input", &hw_analog_inputs_[i]));
+      robot_prefix + "gpio",
+      "analog_input_" + std::to_string(i), &hw_analog_inputs_[i]
+    ));
   }
 
+  /*
   for (size_t i = 0; i < hw_digital_outputs_.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      "digital_output_" + std::to_string(i), "digital_output", &hw_digital_outputs_[i]));
+      robot_prefix + "gpio",
+      "digital_output_" + std::to_string(i), &hw_digital_outputs_[i]
+    ));
   }
 
   for (size_t i = 0; i < hw_analog_outputs_.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      "analog_output_" + std::to_string(i), "analog_output", &hw_analog_outputs_[i]));
+      robot_prefix + "gpio",
+      "analog_output_" + std::to_string(i), &hw_analog_outputs_[i]
+    ));
   }
-
+  */
   return state_interfaces;
 }
 
@@ -302,6 +356,8 @@ std::vector<hardware_interface::CommandInterface>
 StaubliHardwareInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
+
+  const std::string robot_prefix = info_.hardware_parameters.at("robot_prefix");
 
   // Export joint command interfaces (position, velocity, effort)
   for (size_t i = 0; i < num_joints_; ++i) {
@@ -324,12 +380,16 @@ StaubliHardwareInterface::export_command_interfaces()
   // Export GPIO command interfaces
   for (size_t i = 0; i < hw_digital_output_commands_.size(); ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "digital_output_" + std::to_string(i), "digital_output", &hw_digital_output_commands_[i]));
+      robot_prefix + "gpio",
+      "digital_output_" + std::to_string(i),
+      &hw_digital_output_commands_[i]));
   }
 
   for (size_t i = 0; i < hw_analog_output_commands_.size(); ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "analog_output_" + std::to_string(i), "analog_output", &hw_analog_output_commands_[i]));
+      robot_prefix + "gpio",
+      "analog_output_" + std::to_string(i),
+      &hw_analog_output_commands_[i]));
   }
 
   return command_interfaces;
@@ -567,6 +627,19 @@ bool StaubliHardwareInterface::update_state(const RobotStateMessage& state_msg)
             hw_analog_inputs_[i] = state_msg.analog_inputs[i];
         }
     }
+
+    // Update supervision GPIOs
+    supervision_gpio_copy_.operation_mode = static_cast<double>(state_msg.operation_mode);
+    supervision_gpio_copy_.operation_mode_status = \
+        static_cast<double>(state_msg.operation_mode_status);
+    supervision_gpio_copy_.safety_status = static_cast<double>(state_msg.safety_status);
+    supervision_gpio_copy_.control_sequence_delay = static_cast<double>(state_msg.sequence_delay);
+    supervision_gpio_copy_.power_on = state_msg.brakes_released ? 1.0 : 0.0;
+    supervision_gpio_copy_.motion_possible = state_msg.motion_possible ? 1.0 : 0.0;
+    supervision_gpio_copy_.in_motion = state_msg.in_motion ? 1.0 : 0.0;
+    supervision_gpio_copy_.in_error = state_msg.error_state ? 1.0 : 0.0;
+    supervision_gpio_copy_.estop_pressed = state_msg.estop_pressed ? 1.0 : 0.0;
+    supervision_gpio_copy_.wait_for_ack = state_msg.wait_for_error_reset ? 1.0 : 0.0;
 
     return true;
 }

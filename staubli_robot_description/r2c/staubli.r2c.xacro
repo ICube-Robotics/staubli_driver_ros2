@@ -30,6 +30,7 @@
             </xacro:if>
             <xacro:unless value="${use_mock_hardware}">
                 <plugin>staubli_robot_driver/StaubliHardwareInterface</plugin>
+                <param name="robot_prefix">${robot_prefix}</param>
                 <param name="robot_ip">${robot_ip}</param>
                 <param name="control_port">11000</param>
                 <param name="diagnostic_port">11001</param>
@@ -61,9 +62,26 @@
             include_acceleration_command="${include_acceleration_command}"
         />
 
+        <!-- Virtual GPIOs for Control / Supervision -->
+
+
+        <gpio name="${robot_prefix}supervision">
+            <!-- Integers -->
+            <state_interface name="operation_mode"/>
+            <state_interface name="operation_mode_status"/>
+            <state_interface name="safety_status"/>
+            <state_interface name="control_sequence_delay"/>
+            <!-- Booleans -->
+            <state_interface name="power_on"/>
+            <state_interface name="motion_possible"/>
+            <state_interface name="in_motion"/>
+            <state_interface name="in_error"/>
+            <state_interface name="estop_pressed"/>
+            <state_interface name="wait_for_ack"/>
+        </gpio>
+
         <!-- GPIOs -->
 
-        <!--
         <xacro:r2c_gpios_control_description
             robot_prefix="${robot_prefix}"
             num_digital_inputs="${num_digital_inputs}"
@@ -71,10 +89,6 @@
             num_analog_inputs="${num_analog_inputs}"
             num_analog_outputs="${num_analog_outputs}"
         />
-        -->
-
-        <!-- GPIOs for Control / Supervision -->
-        <!-- TODO -->
     </ros2_control>
     </xacro:macro>
 </robot>
