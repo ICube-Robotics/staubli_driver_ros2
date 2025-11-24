@@ -5,6 +5,7 @@
     <Program file="Comm/computeSequenceDelay.pgx" />
     <Program file="Comm/getNextSequenceNumber.pgx" />
     <Program file="Comm/readData.pgx" />
+    <Program file="Comm/readDataOnce.pgx" />
     <Program file="Comm/resetControlSocket.pgx" />
     <Program file="Comm/sendData.pgx" />
     <Program file="Control/stopJointPositionControl.pgx" />

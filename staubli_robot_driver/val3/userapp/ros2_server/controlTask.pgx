@@ -149,14 +149,24 @@
     endIf
 
     if (l_bControlActive)
-      if (l_nSequenceDelay > 2)
+      // Log warning if a ping-pong delay is above two control cycles
+      if (l_nSequenceDelay > 3)
         call logThrottleMsg(throttle_sequence_delay_msg)
       endIf
-      if (l_nSequenceDelay > 4)
+      // Error case 1: robot is moving -> fatal error if delay too high (>20ms)
+      // TODO: modulate acceptable limit depending on control mode (i.e., smaller for velocity...)
+      if (robot_state_msg.robotState.bInMotion and l_nSequenceDelay > 5)
+        logMsg("ros2_server::controlTask : Error, command sequence delay too high during robot motion (" + toString("0.1", l_nSequenceDelay) + "), going to STOP mode", 3)
+        l_bError = true
+        l_nCmdMode = 1
+      endIf
+      // Error case 2: robot is not moving -> allow up to 100ms delay before error as there is no actual risk
+      if (!robot_state_msg.robotState.bInMotion and l_nSequenceDelay > 25)
         logMsg("ros2_server::controlTask : Error, command sequence delay too high (" + toString("0.1", l_nSequenceDelay) + "), going to STOP mode", 3)
         l_bError = true
         l_nCmdMode = 1
       endIf
+      // Check for negative delay (should not happen)
       if (l_nSequenceDelay < 0)
         logMsg("ros2_server::controlTask : Error, negative command sequence delay, going to STOP mode", 3)
         l_bError = true

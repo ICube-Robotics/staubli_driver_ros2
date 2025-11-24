@@ -144,6 +144,7 @@ protected:
     }
 
     // Add hardware parameters
+    info.hardware_parameters["robot_prefix"] = "";
     info.hardware_parameters["robot_ip"] = loopback_address_;
     info.hardware_parameters["control_port"] = std::to_string(robot_control_port_);
     info.hardware_parameters["diagnostic_port"] = std::to_string(robot_diagnostics_port_);

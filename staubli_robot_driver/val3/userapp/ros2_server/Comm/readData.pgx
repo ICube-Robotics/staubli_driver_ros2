@@ -8,53 +8,48 @@
       <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
     </Parameters>
     <Locals>
-      <Local name="l_nSioReadBytes" type="num" xsi:type="array" size="1" />
-      <Local name="l_nSioReadBytesBis" type="num" xsi:type="array" size="1" />
+      <Local name="l_bNewData" type="bool" xsi:type="array" size="1" />
+      <Local name="l_bError" type="bool" xsi:type="array" size="1" />
+      <Local name="l_nMaxAttempts" type="num" xsi:type="array" size="1" />
+      <Local name="l_nAttempt" type="num" xsi:type="array" size="1" />
     </Locals>
     <Code><![CDATA[begin
-  x_bNewData = false
-  x_bError = false
 
-  // Read from UDP socket
-  l_nSioReadBytes = sioGet(x_UdpSocket, x_nData)
+  l_bNewData = false
+  l_bError = false
+  l_nMaxAttempts = 2
+  l_nAttempt = 1
 
-  if(l_nSioReadBytes == size(x_nData))
-    // Successfully read a full message
-    x_bNewData = true
-    return
-  elseIf (l_nSioReadBytes > 0)
-    // Message of wrong size received, error
-    logMsg("ros2_server::readData : message of wrong size received", 2)
-    x_bError = true
-    return
-  endIf
+  // Initialize output flags
+  x_bNewData = l_bNewData
+  x_bError = l_bError
 
-  if (x_bNewData)
-    // If we got something, try to read again to clear the buffer
-    l_nSioReadBytesBis = sioGet(x_UdpSocket, x_nData)
-  endIf
+  // Try to read from UDP socket multiple times
+  while(l_nAttempt <= l_nMaxAttempts)
+    call readDataOnce(x_UdpSocket, x_nData, l_bNewData, l_bError)
 
-  if (l_nSioReadBytesBis > 0 and l_nSioReadBytesBis != size(x_nData))
-    // Message of wrong size received, error
-    logMsg("ros2_server::readData : message of wrong size received (2)", 2)
-    x_bError = true
-    return
-  endIf
+    // If error, set error and exit
+    if(l_bError)
+      logMsg("ros2_server::readData : communication error", 2)
+      x_bNewData = false
+      x_bError = true
+      return
+    endIf
 
-  // Check for errors
-  if(l_nSioReadBytes == -1 or l_nSioReadBytesBis == -1)
-    // Communication error of some kind
-    x_bError = true
-    logMsg("ros2_server::readData : Communication error", 2)
-  elseIf(l_nSioReadBytes == 0)
-    // No data available in buffer
-    x_bError = false
-    // logMsg("ros2_server::readData : No data available", 2)
-  else
-    // Communication error of some kind
-    x_bError = true
-    logMsg("ros2_server::readData : unexpected packet size", 2)
-  endIf
+    // If new (valid) data received, set flag
+    if(l_bNewData)
+      // Successfully read a new message
+      x_bNewData = true
+    endIf
+
+    // If data received, but last attempt did not yield new data, exit
+    if(x_bNewData and !l_bNewData)
+      return
+    endIf
+
+    // Prepare next attempt
+    l_nAttempt = l_nAttempt + 1
+  endWhile
 end]]></Code>
   </Program>
 </Programs>

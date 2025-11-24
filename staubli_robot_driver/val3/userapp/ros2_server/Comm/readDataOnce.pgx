@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Programs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.staubli.com/robotics/VAL3/Program/2">
+  <Program name="readDataOnce">
+    <Parameters xmlns="http://www.staubli.com/robotics/VAL3/Param/1">
+      <Parameter name="x_UdpSocket" type="sio" xsi:type="element" use="reference" />
+      <Parameter name="x_nData" type="num" xsi:type="array" use="reference" />
+      <Parameter name="x_bNewData" type="bool" xsi:type="element" use="reference" />
+      <Parameter name="x_bError" type="bool" xsi:type="element" use="reference" />
+    </Parameters>
+    <Locals>
+      <Local name="l_nSioReadBytes" type="num" xsi:type="array" size="1" />
+    </Locals>
+    <Code><![CDATA[begin
+  x_bNewData = false
+  x_bError = false
+
+  // Read from UDP socket
+  l_nSioReadBytes = sioGet(x_UdpSocket, x_nData)
+
+  if(l_nSioReadBytes == size(x_nData))
+    // Successfully read a full message
+    x_bNewData = true
+  elseIf (l_nSioReadBytes > 0)
+    // Message of wrong size received, error
+    logMsg("ros2_server::readDataOnce : message of wrong size received", 2)
+    x_bError = true
+    return
+  endIf
+end]]></Code>
+  </Program>
+</Programs>

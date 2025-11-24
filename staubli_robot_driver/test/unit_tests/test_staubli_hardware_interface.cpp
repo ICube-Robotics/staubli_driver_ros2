@@ -134,25 +134,52 @@ TEST_F(StaubliHardwareInterfaceTest, PluginLoadingAndInitialization)
  */
 TEST_F(StaubliHardwareInterfaceTest, InterfaceExport)
 {
+  // Start mock robot
+  ASSERT_TRUE(start_mock_robot());
+  rclcpp::sleep_for(std::chrono::milliseconds(100));
+
+  // Initialize & configure
   auto hardware_interface = std::make_unique<StaubliHardwareInterface>();
   auto params = createParams();
-
-  // Initialize
   auto init_result = hardware_interface->on_init(params);
   ASSERT_EQ(init_result, hardware_interface::CallbackReturn::SUCCESS);
 
+  rclcpp_lifecycle::State previous_state;
+  auto config_result = hardware_interface->on_configure(previous_state);
+  ASSERT_EQ(config_result, hardware_interface::CallbackReturn::SUCCESS);
+
   // Export command interfaces
   auto command_interfaces = hardware_interface->export_command_interfaces();
-  // 6 joints * 3 interfaces (pos,vel,eff) + 16 digital outputs + 4 analog outputs = 38
-  EXPECT_EQ(command_interfaces.size(), 38);
+  // 6 joints * [ 4 : 3 interfaces (pos,vel,eff) + 1 interface for ACC (limits only) ]
+  // + 16 digital outputs + 2 analog outputs = 42
+  EXPECT_EQ(command_interfaces.size(), 42);
+
+  if (command_interfaces.size() != 42) {
+    std::cerr << "Command interfaces:" << std::endl;
+    for (const auto& interface : command_interfaces) {
+      std::cerr << " - " << interface.get_name() << std::endl;
+    }
+  }
 
   // Export state interfaces
   auto state_interfaces = hardware_interface->export_state_interfaces();
-  // 6 joints * 3 interfaces
-  // + 16 digital inputs + 4 analog inputs + 16 digital outputs + 4 analog outputs = 58
-  EXPECT_EQ(state_interfaces.size(), 58);
+  // 6 joints * 3 interfaces (18)
+  // + 16 digital inputs + 2 analog inputs (18)
+  // + 10 supervisory interfaces (robot mode, error code, etc.)
+  //       = 46
+  // If we use IO cmd feedback :
+  // + 16 digital outputs + 2 analog outputs
+  //       = 64
+  EXPECT_EQ(state_interfaces.size(), 46);
 
-  // Check interface names
+  if (state_interfaces.size() != 46) {
+    std::cerr << "State interfaces:" << std::endl;
+    for (const auto& interface : state_interfaces) {
+      std::cerr << " - " << interface.get_name() << std::endl;
+    }
+  }
+
+  // Check joint interface names
   bool found_joint1_pos_cmd = false;
   bool found_joint1_vel_cmd = false;
   bool found_joint1_pos_state = false;
@@ -180,6 +207,32 @@ TEST_F(StaubliHardwareInterfaceTest, InterfaceExport)
   EXPECT_TRUE(found_joint1_vel_cmd);
   EXPECT_TRUE(found_joint1_pos_state);
   EXPECT_TRUE(found_joint1_vel_state);
+
+  // Check the supervision GPIOs (not exhaustive...)
+  std::string supervision_gpio_name = "supervision";
+  bool found_operation_mode = false;
+  bool found_operation_mode_status = false;
+  bool found_safety_status = false;
+
+
+  for (const auto& interface : state_interfaces) {
+    if (interface.get_name() == supervision_gpio_name + "/operation_mode") {
+      found_operation_mode = true;
+    }
+    if (interface.get_name() == supervision_gpio_name + "/operation_mode_status") {
+      found_operation_mode_status = true;
+    }
+    if (interface.get_name() == supervision_gpio_name + "/safety_status") {
+      found_safety_status = true;
+    }
+  }
+
+  EXPECT_TRUE(found_operation_mode);
+  EXPECT_TRUE(found_operation_mode_status);
+  EXPECT_TRUE(found_safety_status);
+
+  // Stop mock robot
+  stop_mock_robot();
 }
 
 /**
