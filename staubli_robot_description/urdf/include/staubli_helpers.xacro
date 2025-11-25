@@ -276,10 +276,11 @@
                 <!-- TODO(tpoignonec): Add registration for visual mesh -->
                 <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
-                    <!-- TODO(tpoignonec): Use visual mesh (not STL ones...) -->
                     <xacro:get_mesh link_name="${link_name}" type="visual"/>
                 </geometry>
+                <!-- TODO(tpoignonec): Add parameter to override color?
                 <xacro:get_material link_name="${link_name}" type="visual"/>
+                -->
             </visual>
             <collision>
                 <!-- TODO(tpoignonec): Add registration for visual mesh -->

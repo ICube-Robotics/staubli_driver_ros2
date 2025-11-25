@@ -45,7 +45,7 @@ meshes:
   link_6:
     visual:
       package: staubli_robot_description
-      path: meshes/tx2_60/visual/link_6.dae
+      path: meshes/tx2_60/visual/link_6_L_med.dae
     collision:
       package: staubli_robot_description
-      path: meshes/tx2_60/collision/link_6.stl
+      path: meshes/tx2_60/collision/link_6_L_med.stl

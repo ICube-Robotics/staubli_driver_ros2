@@ -12,12 +12,17 @@
     <xacro:arg name="robot_model_parameters_file" default="${config_dir}/robot_model.yaml"/>
 
     <!-- SRDF macro -->
-
     <xacro:include filename="$(find staubli_moveit_config)/srdf/staubli_macro.srdf.xacro"/>
+
+    <xacro:include filename="$(find staubli_robot_description)/urdf/include/staubli_helpers.xacro" />
+    <xacro:load_robot_model_config robot_model_config_file="$(arg robot_model_parameters_file)"/>
 
     <xacro:staubli_srdf
         robot_model="$(arg robot_model)"
         robot_prefix="$(arg robot_prefix)"
-        robot_model_parameters_file="$(arg robot_model_parameters_file)"/>
+        robot_model_parameters_file="$(arg robot_model_parameters_file)"
+        arm_base_link="$(arg robot_prefix)${link_names[0]}"
+        arm_tip_link="$(arg robot_prefix)${end_effector_frame_name}"
+    />
 
 </robot>

@@ -15,7 +15,7 @@ robot_model:
     # Config of the end-effector frame (tool0)
     parent_link: link_6  # Parent link of the end-effector (last robot link or F/T sensor if present)
     # Transformation from parent_link to end_effector
-    xyz: [0.0, 0.0, 0.07]
+    xyz: [0.0, 0.0, 0.1344]
     rpy: [0.0, 0.0, 0.0]
 
   io:

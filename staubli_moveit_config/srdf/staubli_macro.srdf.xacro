@@ -5,6 +5,8 @@
         robot_model:=^
         robot_prefix:=^
         robot_model_parameters_file:=^
+        arm_base_link:=^
+        arm_tip_link:=^
     ">
 
     <!-- Load robot parameters from YAML file -->
@@ -17,10 +19,7 @@
     <!--CHAINS: When a chain is specified, all the links along the chain (including endpoints) are included in the group. Additionally, all the joints that are parents to included links are also included. This means that joints along the chain and the parent joint of the base link are included in the group-->
     <!--SUBGROUPS: Groups can also be formed by referencing to already defined group names-->
     <group name="${robot_prefix}arm">
-        <chain
-            base_link="${robot_prefix}${link_names[0]}"
-            tip_link="${robot_prefix}${end_effector_frame_name}"
-        />
+        <chain base_link="${arm_base_link}" tip_link="${arm_tip_link}" />
     </group>
 
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->

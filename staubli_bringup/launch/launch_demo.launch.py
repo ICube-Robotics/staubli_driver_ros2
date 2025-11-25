@@ -30,9 +30,6 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "robot_model",
             description="Model of the robot (e.g, 'tx2_60l').",
-            choices=[
-                "tx2_60l",
-            ],
             default_value="tx2_60l",
         )
     )
