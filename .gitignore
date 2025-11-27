@@ -14,3 +14,4 @@ staubli_driver_ros2/doxygen/_build/**
 staubli_driver_ros2/sphinx/_build/**
 staubli_driver_ros2/pdf/**
 staubli_driver_ros2/documentation.html
+staubli_driver_ros2-*.tar.gz

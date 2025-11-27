@@ -1,0 +1,16 @@
+services:
+  staubli_driver_ros2_demo:
+    container_name: staubli_driver_ros2_demo
+    image: staubli_driver_ros2:0.1.0
+    network_mode: host
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:ro
+    command: >
+      ros2 launch staubli_bringup launch_demo.launch.py
+        robot_ip:=${STAUBLI_ROBOT_IP:-192.168.0.254}
+        use_mock_hardware:=${STAUBLI_USE_MOCK_HARDWARE:-true}
