@@ -21,8 +21,9 @@
 
   // Speed must be at 100%
   if getMonitorSpeed()<100
-    popUpMsg("The monitor speed must be at 100%, waiting...")
-    wait(getMonitorSpeed() == 100)
+    logMsg("ros2_server::start : Warning, monitor speed is below 100% and control algorithms might not work correctly...", 2)
+    // popUpMsg("The monitor speed must be at 100%, waiting...")
+    // wait(getMonitorSpeed() == 100)
   endIf
 
   // Reset socket buffers

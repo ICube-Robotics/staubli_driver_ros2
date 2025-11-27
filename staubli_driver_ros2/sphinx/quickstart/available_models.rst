@@ -17,5 +17,9 @@ The Staubli ROS2 Driver currently supports the following robot models "out-of-th
      - 6DoF arm
      - ``tx2_60l``
      - N/A
+   * - TX2-60L MR (medical)
+     - 6DoF arm
+     - ``tx2_60l_med``
+     - F/T sensor not yet supported
 
 Please refer to the :ref:`developer_adding_robot` section for instructions on how to add support for additional robot models.
