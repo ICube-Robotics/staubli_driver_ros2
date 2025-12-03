@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2025 ICUBE Laboratory, University of Strasbourg
 # License: Apache-2.0
 #

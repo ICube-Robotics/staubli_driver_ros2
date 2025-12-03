@@ -1,7 +1,7 @@
 services:
   staubli_driver_ros2_demo:
     container_name: staubli_driver_ros2_demo
-    image: staubli_driver_ros2:0.1.0
+    image: staubli_driver_ros2:0.1.1
     network_mode: host
     ipc: host
     privileged: true
