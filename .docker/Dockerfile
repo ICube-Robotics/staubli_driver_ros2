@@ -20,7 +20,7 @@ RUN apt-get update && apt-get upgrade -y \
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
     colcon build \
         --install-base /opt/ros/staubli/ \
-        --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo && \
     rm -rf /ws && \
     rm -rf /opt/ros/staubli/staubli_robot_driver/include/ && \
     apt-get clean && \
