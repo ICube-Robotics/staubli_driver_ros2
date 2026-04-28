@@ -20,29 +20,26 @@ jobs:
             sudo apt-get install -y -qq texlive-latex-extra
             cd ./staubli_driver_ros2/
             pip install -r requirements.txt
+
       - name: Build documentation
         run: |
             cd ./staubli_driver_ros2
             sphinx-build -b html sphinx sphinx/_build
-            cd ../
-      - name: Create commit
-        run: |
-            git clone https://github.com/tpoignonec/staubli_driver_ros2.git --branch gh-pages --single-branch gh-pages
-            tree -L 2 # for debg purposes
-            cd gh-pages && rm -r * && cd ..
-            mkdir -p gh-pages/docs/
-            mkdir -p gh-pages/api/
-            cp -r ./staubli_driver_ros2/sphinx/_build/* gh-pages/
-            cp -r ./staubli_driver_ros2/doxygen/_build/html/* gh-pages/api/
-            cd gh-pages
-            touch .nojekyll
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git add .
-            git commit -m "Update documentation" -a || true
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
         with:
-          branch: gh-pages
-          directory: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: staubli_driver_ros2/sphinx/_build/
+
+  # Deployment job
+  deploy_documentation:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
