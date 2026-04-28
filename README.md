@@ -14,7 +14,7 @@ To date, only position control is supported. More control modes (velocity and ha
 > If your organisation relies on this software or would like to accelerate the implementation of specific features, project-specific funding or a research collaboration agreement can be arranged through the ICube Laboratory.
 > To do so, please contact `Laurent Barbé <laurent.barbe@unistra.fr>`_.
 
-See full documentation at [TODO add link to doc artefact](TODO).
+See full documentation at [https://icube-robotics.github.io/staubli_driver_ros2/](https://icube-robotics.github.io/staubli_driver_ros2/).
 
 ## ⚠️ Disclaimer and safety instructions
 
@@ -35,7 +35,7 @@ source /opt/ros/jazzy/setup.bash
 
 mkdir ~/ros2_ws/src
 cd ~/ros2_ws/src
-git clone https://github.com/tpoignonec/staubli_driver_ros2.git
+git clone https://github.com/ICube-Robotics/staubli_driver_ros2.git
 cd ..
 
 # Install ROS2 dependencies

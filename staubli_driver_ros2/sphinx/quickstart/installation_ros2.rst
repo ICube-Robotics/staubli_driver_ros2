@@ -29,7 +29,7 @@ See the `official documentation <https://docs.ros.org/en/jazzy/Installation.html
 
     mkdir ~/ros2_staubli_ws
     cd ~/ros2_staubli_ws
-    git clone https://github.com/tpoignonec/staubli_driver_ros2.git src/staubli_driver_ros2
+    git clone https://github.com/ICube-Robotics/staubli_driver_ros2.git src/staubli_driver_ros2
 
     rosdep install --ignore-src --from-paths . -y -r
 
