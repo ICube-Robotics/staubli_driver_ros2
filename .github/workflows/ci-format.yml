@@ -10,7 +10,9 @@ on:
 jobs:
   pre-commit:
     name: Format
-    runs-on: ros:jazzy-ros-base
+    runs-on: ubuntu-latest
+    container:
+      image: ros:jazzy-ros-base
     steps:
     - uses: actions/checkout@v6
     - uses: actions/setup-python@v6.2.0
