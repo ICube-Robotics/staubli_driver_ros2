@@ -1,6 +1,43 @@
 Bringup the driver
 ===================
 
+Quick test without a robot
+***************************
+
+Before setting up the physical robot, you can verify your installation using
+**mock hardware** — a software simulation of the hardware interface that requires
+no network connection and no VAL3 application running on the robot.
+
+.. code-block:: bash
+
+    source install/setup.bash
+
+    ros2 launch staubli_bringup launch_robot_control.launch.py \
+        robot_model:=tx2_60l
+
+.. note::
+    ``use_mock_hardware:=true`` is the default, so no extra argument is needed.
+
+Verify that the hardware interface and controllers are active:
+
+.. code-block:: bash
+
+    # In another terminal, source the workspace and run:
+    ros2 control list_hardware_interfaces
+    ros2 control list_controllers
+
+You should see ``joint_state_broadcaster`` listed as ``active``, and all six
+joint position, velocity, and effort state interfaces as ``available``.
+
+.. note::
+    The mock hardware uses a simple dynamic model: state interfaces (position,
+    velocity) are computed from the last command received on the corresponding
+    command interface. No UDP packets are sent or received. This is sufficient
+    to verify your installation and test controller logic, but does not reflect
+    real robot dynamics.
+
+Once this test passes, proceed with the physical robot setup below.
+
 Setup the robot
 ****************
 
@@ -56,10 +93,12 @@ You can use the ros2_control `CLI interface <https://control.ros.org/master/doc/
     ros2 control list_hardware_interfaces
 
 .. warning::
+
     The ``<joint_name>/velocity`` command interfaces are provided, but the internal implementation is not yet finalized.
     For now, the HW will reject the request for joint velocity control mode.
 
 .. note::
+
     The ``<joint_name>/acceleration`` command interfaces are a by-product of providing joint limits to the ``Joint Limiter``.
     It is not an actual command mode and if you try to use it, the HW will reject the request.
     Hopefully, a more user-friendly way of setting the max acceleration parameter will be included in future releases of

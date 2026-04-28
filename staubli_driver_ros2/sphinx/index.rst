@@ -9,10 +9,19 @@ This package provides a ROS2 driver for Staubli robots, enabling integration and
 
 Current developments are based on the **jazzy** ROS 2 distribution (Ubuntu 24.04 LTS).
 The driver is designed for Staubli robot with CS9 controllers, older versions are not supported.
-Refer to :ref:`supported_robots` for a list of supported robot models "out-of-the-box".
+To date, only position control is supported.
+More control modes (velocity and hand-guiding) as well as diagnostics support will be included in subsequent releases.
 
 .. note::
-  This driver is currently in development and some features will only be available in subsequent releases.
+   This driver is currently in development. Due to interrupted funding, active development
+   has been paused and is expected to resume in Q3/Q4 2026. The driver is shared in its
+   current state following solicitations from the robotics community — please keep in mind
+   that it is an early-stage prototype rather than industry-ready software.
+
+   If your organisation relies on this software or would like to accelerate the
+   implementation of specific features, project-specific funding or a research collaboration
+   agreement can be arranged through the ICube Laboratory (University of Strasbourg). To do so, please contact
+   `Laurent Barbé <laurent.barbe@unistra.fr>`_.
 
 .. line-block::
 
@@ -38,4 +47,4 @@ Refer to :ref:`supported_robots` for a list of supported robot models "out-of-th
 
    **Users assume all responsibility and risk associated with its use.**
 
-.. include:: frontmatter_pdf/toc.rst
+.. include:: toc.rst

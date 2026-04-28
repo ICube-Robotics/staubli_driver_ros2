@@ -28,24 +28,13 @@
 
   demo_applications/moveit2
   demo_applications/get_robot_logs
-  demo_applications/gpios
-  demo_applications/diagnostics
+  demo_applications/troubleshooting
 
 .. only:: latex
 
     .. raw:: latex
 
-         \part{Driver design}
-
-.. toctree::
-  :maxdepth: 1
-  :caption: Driver design
-  :glob:
-
-  driver_design/driver_architecture
-  driver_design/communication_protocol
-  driver_design/robot_description
-  driver_design/roadmap
+         \part{Developer guide}
 
 .. only:: latex
 
@@ -59,5 +48,4 @@
   :glob:
 
   changelog
-  developer_guide/add_your_robot
   developer_guide/API

@@ -1,7 +1,7 @@
 .. _demo_moveit2:
 
-Plan a motion with Moveit2
-============================
+Plan and execute a motion with Moveit2
+=======================================
 
 Before you start
 ~~~~~~~~~~~~~~~~~

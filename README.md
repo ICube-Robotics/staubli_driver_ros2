@@ -2,11 +2,17 @@
 
 ROS2 stack to control Staubli robots using [ros2_control](https://github.com/ros-controls/ros2_control).
 
-> [!NOTE]
-> This driver is currently in development and some features will only be available in subsequent releases.
-
 Current developments are based on the jazzy ROS 2 distribution (Ubuntu 24.04 LTS).
 The driver is designed for Staubli robot with CS9 controllers, older versions are not supported.
+To date, only position control is supported. More control modes (velocity and hand-guiding) as well as diagnostics support will be included in subsequent releases.
+
+> [!NOTE]
+> This driver is currently in development.
+> However, due to interrupted funding on this project, active developments have been paused after the initial POC (november 2025). They should resume in Q3/Q4 of 2026.
+> The driver is shared in its current state due to solicitations from the robotics community, but please keep in mind that it is more of an prototype than an industry-ready software.
+>
+> If your organisation relies on this software or would like to accelerate the implementation of specific features, project-specific funding or a research collaboration agreement can be arranged through the ICube Laboratory.
+> To do so, please contact `Laurent Barbé <laurent.barbe@unistra.fr>`_.
 
 See full documentation at [TODO add link to doc artefact](TODO).
 

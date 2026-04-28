@@ -18,4 +18,5 @@ sphinx-autobuild # See https://sublime-and-sphinx-guide.readthedocs.io/en/latest
 sphinx_mdinclude
 sphinxcontrib.plantuml
 sphinxcontrib-video
+sphinxcontrib-mermaid
 sphinx-copybutton

@@ -69,6 +69,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinxcontrib.plantuml",
     "sphinxcontrib.video",
+    "sphinxcontrib.mermaid",
     "sphinx_copybutton",
     "breathe",
 ]

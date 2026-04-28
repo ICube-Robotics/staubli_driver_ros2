@@ -1,14 +1,22 @@
 .. _overview:
 
-Package Overview
+Stack Overview
 ===============
+
+The following ROS2 packages make up the Staubli Driver ROS2 stack:
+
+- **staubli_driver_ros2**: Meta-package containing the documentation.
+- **staubli_robot_driver**: The main package, containing the Hardware Interface and the VAL3 code that runs on the robot controller.
+- **staubli_robot_description**: URDF and XACRO files for Staubli robots.
+- **staubli_moveit_config**: MoveIt2 configuration package for Staubli robots.
+- **staubli_bringup**: Launch files to start the driver and related nodes.
 
 .. figure:: ../images/staubli_driver_ros2_overview.png
 
     The Staubli Driver ROS2 stack provides a VAL3 robot-side server and an ROS2 client in the form of a Hardware Interface.
 
 Staubli Hardware Interface
--------------------------
+---------------------------
 
 State interfaces
 ^^^^^^^^^^^^^^^^
@@ -80,7 +88,7 @@ FTP utility scripts
 --------------------
 
 The package provides utility scripts to facilitate file transfers to and from the robot controller using FTP.
-These scripts can be found in the `staubli_driver_ros2/scripts` directory.
+These scripts can be found in the ``staubli_driver_ros2/scripts`` directory.
 Currently, the following scripts are available:
 
 - ``upload_val3_server.py``: Uploads the VAL3 server program to the robot controller.

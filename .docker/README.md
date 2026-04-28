@@ -1,6 +1,6 @@
 # Demo docker image
 
-## Build image
+## Build image locally
 
 ```bash
 cd staubli_driver_ros2

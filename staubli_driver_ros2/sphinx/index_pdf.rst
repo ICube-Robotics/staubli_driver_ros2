@@ -20,4 +20,4 @@ Staubli ROS2 Driver Stack
 .. include:: frontmatter_pdf/disclaimer.rst
 
 
-.. include:: frontmatter_pdf/toc.rst
+.. include:: toc.rst

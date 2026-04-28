@@ -1,4 +1,0 @@
-Driver architecture
-============================
-
-TODO
