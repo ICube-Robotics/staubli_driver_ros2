@@ -12,7 +12,7 @@ To date, only position control is supported. More control modes (velocity and ha
 > The driver is shared in its current state due to solicitations from the robotics community, but please keep in mind that it is more of an prototype than an industry-ready software.
 >
 > If your organisation relies on this software or would like to accelerate the implementation of specific features, project-specific funding or a research collaboration agreement can be arranged through the ICube Laboratory.
-> To do so, please contact `Laurent Barbé <laurent.barbe@unistra.fr>`_.
+> To do so, please contact [Laurent Barbé](mailto:laurent.barbe@unistra.fr).
 
 See full documentation at [https://icube-robotics.github.io/staubli_driver_ros2/](https://icube-robotics.github.io/staubli_driver_ros2/).
 
@@ -75,3 +75,4 @@ ros2 launch staubli_bringup launch_robot_control.launch.py \
 [ICube Laboratory](https://icube.unistra.fr), [University of Strasbourg](https://www.unistra.fr/), France
 
 __Thibault Poignonec:__ [tpoignonec@unistra.fr](mailto:tpoignonec@unistra.fr) / [thibault.poignonec@gmail.com](mailto:thibault.poignonec@gmail.com)
+__Laurent Barbé:__ [laurent.barbe@unistra.fr](mailto:laurent.barbe@unistra.fr)
