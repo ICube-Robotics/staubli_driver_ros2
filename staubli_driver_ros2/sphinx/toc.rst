@@ -19,14 +19,15 @@
 
   .. raw:: latex
 
-     \part{Demo applications}
+     \part{Demos}
 
 .. toctree::
   :maxdepth: 1
-  :caption: Demo applications
+  :caption: Demos
   :glob:
 
   demo_applications/moveit2
+  demo_applications/moveit2_docker
   demo_applications/get_robot_logs
   demo_applications/troubleshooting
 
