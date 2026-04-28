@@ -10,11 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+## [0.1.2] - 2026/04/28
+
+### Added
+
 - New documentation sections
 - CI (Github actions)
 - Docker configuration and associated CI/CD pipeline for Github actions
-
-### Changed
 
 ## [0.1.1] - November 2025
 
