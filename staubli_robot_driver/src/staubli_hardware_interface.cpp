@@ -681,6 +681,8 @@ bool StaubliHardwareInterface::update_state(const RobotStateMessage& state_msg)
     supervision_gpio_copy_.in_motion = static_cast<double>(state_msg.in_motion);
     supervision_gpio_copy_.in_error = static_cast<double>(state_msg.error_state);
     supervision_gpio_copy_.estop_pressed = static_cast<double>(state_msg.estop_pressed);
+    supervision_gpio_copy_.wait_for_ack = static_cast<double>(
+        state_msg.safety_status == SafetyStatus::WAIT_FOR_RESTART ? 1.0 : 0.0);
     return true;
 }
 
