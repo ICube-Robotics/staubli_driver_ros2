@@ -42,6 +42,8 @@ const size_t MAX_ANALOG_IO = 4;
 StaubliHardwareInterface::StaubliHardwareInterface()
 : robot_driver_(nullptr),
   current_control_mode_(CommandType::STOP),
+  pending_mode_(CommandType::STOP),
+  switch_prepared_(false),
   num_joints_(0)
 {
 }
@@ -493,97 +495,128 @@ hardware_interface::return_type StaubliHardwareInterface::write(
     return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type StaubliHardwareInterface::prepare_command_mode_switch(
-    const std::vector<std::string>& start_interfaces,
-    const std::vector<std::string>& /*stop_interfaces*/)
+CommandType StaubliHardwareInterface::resolve_mode(
+    const std::vector<std::string>& start_interfaces) const
 {
-    // Determine the new control mode based on the interfaces
-    CommandType new_mode = CommandType::STOP;
-
     for (const auto& interface : start_interfaces) {
         if (interface.find("position") != std::string::npos) {
-            new_mode = CommandType::JOINT_POSITION;
-            break;
+            return CommandType::JOINT_POSITION;
         } else if (interface.find("velocity") != std::string::npos) {
-            new_mode = CommandType::JOINT_VELOCITY;
-            break;
+            return CommandType::JOINT_VELOCITY;
         } else if (interface.find("effort") != std::string::npos) {
-            new_mode = CommandType::JOINT_TORQUE;
-            break;
+            return CommandType::JOINT_TORQUE;
         } else if (interface.find("acceleration") != std::string::npos) {
-            RCLCPP_WARN(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Preparing to switch to unsupported control mode ACCELERATION, will be rejected!");
+            return CommandType::INVALID;
         }
     }
+    return CommandType::STOP;
+}
 
-    RCLCPP_INFO(
-    rclcpp::get_logger("StaubliHardwareInterface"),
-        "Preparing mode switch to: %d", static_cast<int>(new_mode));
+hardware_interface::return_type StaubliHardwareInterface::prepare_command_mode_switch(
+    const std::vector<std::string>& start_interfaces,
+    const std::vector<std::string>& stop_interfaces)
+{
+    switch_prepared_ = false;
 
+    // Determine incoming mode (from interfaces being started)
+    const CommandType incoming_mode = resolve_mode(start_interfaces);
+
+    // TODO(anyone): consider validating that all interfaces are stopped/started together
+    // (e.g., mixed position and velocity interfaces should not be allowed)
+
+    // Validate mode. Acceleration interfaces are exported for joint-limiter support only;
+    // ignore them when resolving the effective incoming command mode.
+    // INVALID is returned by resolve_mode() only when acceleration is the ONLY match and
+    // there are no position / velocity / effort interfaces in start_interfaces.
+    const bool only_stop_or_accel_starting =
+        (incoming_mode == CommandType::STOP || incoming_mode == CommandType::INVALID);
+
+    // TODO(anyone): once more modes are supported, the transition logic will have to be
+    // validated against the current active mode...
+
+    // Determine outgoing mode (from interfaces being stopped)
+    // const CommandType outgoing_mode = resolve_mode(stop_interfaces);
+    // (void)outgoing_mode;
+
+    switch (incoming_mode) {
+        case CommandType::STOP:
+            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
+                "prepare_command_mode_switch: incoming STOP command mode");
+            break;  // accepted
+        case CommandType::JOINT_POSITION:
+            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
+                "prepare_command_mode_switch: incoming JOINT_POSITION command mode");
+            break;  // accepted
+        case CommandType::JOINT_VELOCITY:
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Velocity control is not yet supported, switch rejected");
+            return hardware_interface::return_type::ERROR;
+        case CommandType::JOINT_TORQUE:
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Torque/effort control is not yet supported, switch rejected");
+            return hardware_interface::return_type::ERROR;
+        case CommandType::INVALID:
+            // Acceleration-only start interfaces: treated as no active joint command mode
+            if (!only_stop_or_accel_starting) {
+                RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                    "Requested interface is not a supported command mode, switch rejected");
+                return hardware_interface::return_type::ERROR;
+            }
+            break;
+        default:
+            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Requested interface is not a supported command mode, switch rejected");
+            return hardware_interface::return_type::ERROR;
+    }
+
+    // Cache resolved mode for perform_command_mode_switch
+    pending_mode_ = (incoming_mode == CommandType::INVALID) ? CommandType::STOP : incoming_mode;
+    switch_prepared_ = true;
     return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_switch(
-    const std::vector<std::string>& start_interfaces,
+    const std::vector<std::string>& /*start_interfaces*/,
     const std::vector<std::string>& /*stop_interfaces*/)
 {
-    // Determine and set the new control mode
-    CommandType new_mode = CommandType::STOP;
+    // Consume the mode that was validated and cached in prepare_command_mode_switch.
+    // If prepare was never called (e.g. on startup), treat as a no-op STOP switch.
+    const CommandType new_mode = switch_prepared_ ? pending_mode_ : CommandType::STOP;
+    switch_prepared_ = false;  // consume the prepared mode
 
-    for (const auto& interface : start_interfaces) {
-        if (interface.find("position") != std::string::npos) {
-            new_mode = CommandType::JOINT_POSITION;
-            RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Switching to JOINT_POSITION mode");
-            break;
-        } else if (interface.find("velocity") != std::string::npos) {
-            // new_mode = CommandType::JOINT_VELOCITY;
-            new_mode = CommandType::INVALID;  // Will fallback to STOP
+    // Validate robot state for JOINT_POSITION before committing the switch.
+    if (new_mode == CommandType::JOINT_POSITION) {
+        if (state_msg_.error_state) {
             RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Switching to VELOCITY control mode is not (yet) supported! Switch rejected.");
-            break;
-        } else if (interface.find("acceleration") != std::string::npos) {
-            new_mode = CommandType::INVALID;  // Will fallback to STOP
+                "Cannot switch to JOINT_POSITION: robot is in error state");
+            current_control_mode_ = CommandType::STOP;
+            return hardware_interface::return_type::ERROR;
+        }
+        if (!state_msg_.motion_possible) {
             RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Switching to ACCELERATION control mode is not supported! Switch rejected.");
-            break;
+                "Cannot switch to JOINT_POSITION: robot brakes engaged");
+            current_control_mode_ = CommandType::STOP;
+            return hardware_interface::return_type::ERROR;
+        }
+        if (state_msg_.operation_mode_status != 0) {
+            RCLCPP_WARN(rclcpp::get_logger("StaubliHardwareInterface"),
+                "Robot is on HOLD — ensure robot is enabled before commanding motion");
         }
     }
 
-    // Initialize commands
-    hw_joint_position_commands_ = hw_joint_positions_;
+    // Safe-initialize position commands to current position; reset velocity/acceleration.
+    // Use std::copy / std::fill (no reallocation) to keep raw pointers in CommandInterfaces valid.
+    std::copy(hw_joint_positions_.begin(), hw_joint_positions_.end(),
+                hw_joint_position_commands_.begin());
     std::fill(hw_joint_velocity_commands_.begin(), hw_joint_velocity_commands_.end(), 0.0);
     std::fill(hw_joint_acceleration_commands_.begin(), hw_joint_acceleration_commands_.end(), 0.0);
 
-
-    if (new_mode != CommandType::STOP && new_mode != CommandType::INVALID) {
-        // Check that the robot is not in error state
-        if (state_msg_.error_state) {
-            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Cannot switch control mode, robot is in error state!");
-            current_control_mode_ = CommandType::STOP;
-            return hardware_interface::return_type::ERROR;
-        }
-        // Check that motion is possible
-        if (!state_msg_.motion_possible) {
-            RCLCPP_ERROR(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Cannot switch control mode, robot brakes engaged!");
-            current_control_mode_ = CommandType::STOP;
-            return hardware_interface::return_type::ERROR;
-        }
-        // Ideally, the robot is not on hold
-        if (state_msg_.operation_mode_status != 0) {
-            RCLCPP_WARN(rclcpp::get_logger("StaubliHardwareInterface"),
-                "Robot is on HOLD! ensure robot is enabled (\"play\" button)"
-                " before commanding motion...");
-        }
-    }
-
+    // Save new mode and log the switch
+    RCLCPP_INFO(rclcpp::get_logger("StaubliHardwareInterface"),
+        "Switched from control mode: %d to control mode: %d",
+        static_cast<int>(current_control_mode_),
+        static_cast<int>(new_mode));
     current_control_mode_ = new_mode;
-
-    RCLCPP_INFO(
-    rclcpp::get_logger("StaubliHardwareInterface"),
-        "Switched to control mode: %d", static_cast<int>(current_control_mode_));
 
     return hardware_interface::return_type::OK;
 }
