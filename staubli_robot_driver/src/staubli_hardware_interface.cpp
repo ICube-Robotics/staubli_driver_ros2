@@ -624,7 +624,7 @@ hardware_interface::return_type StaubliHardwareInterface::perform_command_mode_s
 bool StaubliHardwareInterface::update_state(const RobotStateMessage& state_msg)
 {
     // Update joint positions
-    if (true)  // { state_msg.has_joint_positions)
+    if (state_msg.has_joint_positions)
     {
         for (size_t i = 0; i < num_joints_ && i < 6; ++i) {
             hw_joint_positions_[i] = deg2rad(state_msg.joint_positions[i]);
@@ -636,8 +636,7 @@ bool StaubliHardwareInterface::update_state(const RobotStateMessage& state_msg)
     }
 
     // Update joint velocities
-    if (true)  // { state_msg.has_joint_velocities) {
-    {
+    if (state_msg.has_joint_velocities) {
         for (size_t i = 0; i < num_joints_ && i < 6; ++i) {
             hw_joint_velocities_[i] = deg2rad(state_msg.joint_velocities[i]);
         }
