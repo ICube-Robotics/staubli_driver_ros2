@@ -73,6 +73,7 @@ private:
     boost::asio::io_service io_service_;
     boost::asio::ip::udp::socket socket_;
     boost::asio::ip::udp::endpoint local_endpoint_, remote_endpoint_;
+    boost::asio::ip::udp::endpoint sender_endpoint_;  // filled by async_receive_from
 
     // Buffer for receiving data
     std::vector<uint8_t> recv_buffer_;
@@ -328,6 +329,15 @@ void UDPSocketImpl::handle_data_received(
     if (error) {
         RCLCPP_ERROR(logger_, "Error in UDP receive: %s", error.message().c_str());
     }
+    // TODO(tpoignonec): validate sender before processing. Packets from unexpected hosts
+    // should be dropped to prevent a rogue sender from injecting
+    // state data or disrupting sequence-number tracking:
+    //   if (sender_endpoint_.address() != remote_endpoint_.address()) {
+    //       RCLCPP_WARN_THROTTLE(logger_, ..., "Dropping packet from unexpected sender %s",
+    //           sender_endpoint_.address().to_string().c_str());
+    //       return;
+    //   }
+
     // Call the user callback
     RCLCPP_DEBUG(logger_, "Invoking reception callback");
     this->reception_callback_(recv_buffer_, bytes_transferred);
@@ -341,7 +351,7 @@ void UDPSocketImpl::handle_data_received(
 void UDPSocketImpl::start_receive() {
     socket_.async_receive_from(
         boost::asio::buffer(recv_buffer_, recv_buffer_.size()),
-        remote_endpoint_,
+        sender_endpoint_,
         [this](auto error, auto bytes_transferred) {
             // Handle the event
             handle_data_received(error, bytes_transferred);
