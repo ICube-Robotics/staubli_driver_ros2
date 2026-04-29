@@ -200,13 +200,26 @@ bool UDPSocketImpl::send(std::vector<uint8_t>& data) {
     }
     boost::system::error_code err;
 
-    // Send data
+    // Send data. MSG_DONTWAIT makes the call non-blocking: if the kernel send
+    // buffer is full the syscall returns EWOULDBLOCK immediately instead of
+    // stalling the RT control thread. One dropped command is safer than a
+    // missed deadline.
     RCLCPP_DEBUG(logger_, "Sending %zu bytes via UDP", data.size());
     socket_.send_to(
         boost::asio::buffer(data.data(), data.size()),
-        remote_endpoint_, 0, err);
+        remote_endpoint_, MSG_DONTWAIT, err);
 
-    if (err.value() != 0) {
+    if (err == boost::asio::error::would_block) {
+        // This is not an error per se.
+        // It just means the kernel send buffer is full or blocked for some reason.
+        // In this case, we drop the packet and log a warning.
+        RCLCPP_WARN(logger_,
+            "Could not send UDP packet: send buffer full or socket is busy. Packet dropped.");
+
+        // TODO(tpoignonec): consider adding a counter for dropped packets and trigger an error
+        // beyond a certain threshold. Alternatively, we could consider implementing a non-blocking
+        // async send. TBD.
+    } else if (err.value() != 0) {
         RCLCPP_ERROR(logger_, "Error sending UDP packet: %s", err.message().c_str());
         return false;
     }

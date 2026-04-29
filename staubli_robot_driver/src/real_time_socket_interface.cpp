@@ -53,7 +53,6 @@ bool RealTimeSocketInterface<MessageSub, MessagePub>::send_message(const Message
         return false;
     }
     // Send the message
-    // TODO(tpoignonec): Make this non-blocking...
     if (!this->socket_->send(data_out_)) {
         RCLCPP_ERROR(this->logger_, "Cannot send message: send over socket failed");
         return false;
