@@ -9,7 +9,7 @@ To date, only position control is supported. More control modes (velocity and ha
 > [!NOTE]
 > This driver is currently in development.
 > However, due to interrupted funding on this project, active developments have been paused after the initial POC (november 2025). They should resume in Q3/Q4 of 2026.
-> The driver is shared in its current state due to solicitations from the robotics community, but please keep in mind that it is more of an prototype than an industry-ready software.
+> The driver is shared in its current state due to solicitations from the robotics community, but please keep in mind that it is more of a prototype than an industry-ready software.
 >
 > If your organisation relies on this software or would like to accelerate the implementation of specific features, project-specific funding or a research collaboration agreement can be arranged through the ICube Laboratory.
 > To do so, please contact [Laurent Barbé](mailto:laurent.barbe@unistra.fr).
@@ -23,7 +23,7 @@ This software is provided "as is" without any warranties. The authors or distrib
 > [!IMPORTANT]
 > In order to test the driver safely:
 > - Always **test first in `MANUAL` mode**
-> - Once you switch to `AUTO` mode, keep the E-stop close by...
+> - Once you switch to `AUTO` mode, always supervise the robot and keep the E-stop close by to be able to stop the robot in case of emergency 
 > - When testing the driver with Moveit, start planning trajectories with a (very) low velocity and acceleration scaling (e.g., 10% max). It is also recommended to check the expected motion in Rviz before executing it.
 
 ## 🛠️ Installation
