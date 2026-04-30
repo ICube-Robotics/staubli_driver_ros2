@@ -73,6 +73,7 @@ private:
     boost::asio::io_service io_service_;
     boost::asio::ip::udp::socket socket_;
     boost::asio::ip::udp::endpoint local_endpoint_, remote_endpoint_;
+    boost::asio::ip::udp::endpoint sender_endpoint_;  // filled by async_receive_from
 
     // Buffer for receiving data
     std::vector<uint8_t> recv_buffer_;
@@ -200,13 +201,26 @@ bool UDPSocketImpl::send(std::vector<uint8_t>& data) {
     }
     boost::system::error_code err;
 
-    // Send data
+    // Send data. MSG_DONTWAIT makes the call non-blocking: if the kernel send
+    // buffer is full the syscall returns EWOULDBLOCK immediately instead of
+    // stalling the RT control thread. One dropped command is safer than a
+    // missed deadline.
     RCLCPP_DEBUG(logger_, "Sending %zu bytes via UDP", data.size());
     socket_.send_to(
         boost::asio::buffer(data.data(), data.size()),
-        remote_endpoint_, 0, err);
+        remote_endpoint_, MSG_DONTWAIT, err);
 
-    if (err.value() != 0) {
+    if (err == boost::asio::error::would_block) {
+        // This is not an error per se.
+        // It just means the kernel send buffer is full or blocked for some reason.
+        // In this case, we drop the packet and log a warning.
+        RCLCPP_WARN(logger_,
+            "Could not send UDP packet: send buffer full or socket is busy. Packet dropped.");
+
+        // TODO(tpoignonec): consider adding a counter for dropped packets and trigger an error
+        // beyond a certain threshold. Alternatively, we could consider implementing a non-blocking
+        // async send. TBD.
+    } else if (err.value() != 0) {
         RCLCPP_ERROR(logger_, "Error sending UDP packet: %s", err.message().c_str());
         return false;
     }
@@ -315,6 +329,15 @@ void UDPSocketImpl::handle_data_received(
     if (error) {
         RCLCPP_ERROR(logger_, "Error in UDP receive: %s", error.message().c_str());
     }
+    // TODO(tpoignonec): validate sender before processing. Packets from unexpected hosts
+    // should be dropped to prevent a rogue sender from injecting
+    // state data or disrupting sequence-number tracking:
+    //   if (sender_endpoint_.address() != remote_endpoint_.address()) {
+    //       RCLCPP_WARN_THROTTLE(logger_, ..., "Dropping packet from unexpected sender %s",
+    //           sender_endpoint_.address().to_string().c_str());
+    //       return;
+    //   }
+
     // Call the user callback
     RCLCPP_DEBUG(logger_, "Invoking reception callback");
     this->reception_callback_(recv_buffer_, bytes_transferred);
@@ -328,7 +351,7 @@ void UDPSocketImpl::handle_data_received(
 void UDPSocketImpl::start_receive() {
     socket_.async_receive_from(
         boost::asio::buffer(recv_buffer_, recv_buffer_.size()),
-        remote_endpoint_,
+        sender_endpoint_,
         [this](auto error, auto bytes_transferred) {
             // Handle the event
             handle_data_received(error, bytes_transferred);

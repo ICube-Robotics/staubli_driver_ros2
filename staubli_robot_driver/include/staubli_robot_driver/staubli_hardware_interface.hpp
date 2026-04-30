@@ -80,6 +80,9 @@ public:
         const std::vector<std::string>& stop_interfaces) final;
 
 private:
+    /// Map start_interfaces to a CommandType. Returns INVALID for unsupported modes.
+    CommandType resolve_mode(const std::vector<std::string>& start_interfaces) const;
+
     /// Update the internal state from the robot driver
     bool update_state(const RobotStateMessage& state_msg);
 
@@ -92,6 +95,13 @@ private:
 
     /// Enum defining the current control mode
     CommandType current_control_mode_;
+
+    /// Pending mode resolved during prepare_command_mode_switch and consumed by perform.
+    /// Mirrors the UR driver pattern: prepare caches, perform consumes.
+    CommandType pending_mode_;
+
+    /// True when a valid switch has been prepared and is awaiting perform.
+    bool switch_prepared_;
 
     struct SupervisionGpio {
         double operation_mode;
