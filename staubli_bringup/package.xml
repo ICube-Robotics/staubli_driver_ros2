@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>staubli_bringup</name>
-  <version>0.1.2</version>
+  <version>0.1.3</version>
   <description>Bringup package for Staubli robots, providing launch files to start the robot driver and associated controllers.</description>
 
   <maintainer email="thibault.poignonec@gmail.com">Thibault Poignonec</maintainer>
