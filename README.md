@@ -25,7 +25,7 @@ This software is provided "as is" without any warranties. The authors or distrib
 > [!IMPORTANT]
 > In order to test the driver safely:
 > - Always **test first in `MANUAL` mode**
-> - Once you switch to `AUTO` mode, always supervise the robot and keep the E-stop close by to be able to stop the robot in case of emergency 
+> - Once you switch to `AUTO` mode, always supervise the robot and keep the E-stop close by to be able to stop the robot in case of emergency
 > - When testing the driver with Moveit, start planning trajectories with a (very) low velocity and acceleration scaling (e.g., 10% max). It is also recommended to check the expected motion in Rviz before executing it.
 
 ## 🛠️ Installation
