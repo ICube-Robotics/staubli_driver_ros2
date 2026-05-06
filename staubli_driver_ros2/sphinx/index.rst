@@ -14,7 +14,7 @@ More control modes (velocity and hand-guiding) as well as diagnostics support wi
 
 .. note::
    This driver is currently in development. Due to interrupted funding, active development
-   has been paused and is expected to resume in Q3/Q4 2026. The driver is shared in its
+   has been paused and is expected to resume shortly. The driver is shared in its
    current state following solicitations from the robotics community — please keep in mind
    that it is an early-stage prototype rather than industry-ready software.
 
