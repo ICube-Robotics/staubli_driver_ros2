@@ -1,5 +1,7 @@
 # staubli_driver_ros2
 
+[![Build (jazzy)](https://github.com/ICube-Robotics/staubli_driver_ros2/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ICube-Robotics/staubli_driver_ros2/actions/workflows/ci.yml)
+
 ROS2 stack to control Staubli robots using [ros2_control](https://github.com/ros-controls/ros2_control).
 
 Current developments are based on the jazzy ROS 2 distribution (Ubuntu 24.04 LTS).
