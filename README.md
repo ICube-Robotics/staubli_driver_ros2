@@ -8,8 +8,8 @@ To date, only position control is supported. More control modes (velocity and ha
 
 > [!NOTE]
 > This driver is currently in development.
-> However, due to interrupted funding on this project, active developments have been paused after the initial POC (november 2025). They should resume in Q3/Q4 of 2026.
-> The driver is shared in its current state due to solicitations from the robotics community, but please keep in mind that it is more of a prototype than an industry-ready software.
+> However, due to interrupted funding on this project, active developments have been paused after the initial POC (november 2025). They should resume shortly of 2026.
+> The driver is shared in its current state due to solicitations from the robotics community, but please keep in mind that it is more of an prototype than an industry-ready software.
 >
 > If your organisation relies on this software or would like to accelerate the implementation of specific features, project-specific funding or a research collaboration agreement can be arranged through the ICube Laboratory.
 > To do so, please contact [Laurent Barbé](mailto:laurent.barbe@unistra.fr).
