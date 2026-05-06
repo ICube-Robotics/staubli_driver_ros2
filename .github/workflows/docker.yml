@@ -29,7 +29,7 @@ jobs:
           context: .
           file: .docker/Dockerfile
           push: true
-          tags: ghcr.io/${{ toLower(github.repository) }}:${{ github.ref_name }}
+          tags: ghcr.io/icube-robotics/staubli_driver_ros2:${{ github.ref_name }}
           # Pass build arguments:
           build-args: |
             ROS_DISTRO=jazzy
