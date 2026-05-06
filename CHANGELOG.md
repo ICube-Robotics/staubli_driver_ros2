@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.1.3] - 2026/05/06
+
+### Changed
+
+- Fix package licenses and descriptions
+- Add CI badge
+
 ## [0.1.2] - 2026/04/28
 
 ### Added
