@@ -3,9 +3,11 @@
 <package format="3">
   <name>staubli_bringup</name>
   <version>0.1.2</version>
-  <description>TODO: Package description</description>
-  <maintainer email="thibault.poignonec@gmail.com">tpoignonec</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Bringup package for Staubli robots, providing launch files to start the robot driver and associated controllers.</description>
+
+  <maintainer email="thibault.poignonec@gmail.com">Thibault Poignonec</maintainer>
+  <license>Apache License 2.0</license>
+  <author email="thibault.poignonec@gmail.com">Thibault Poignonec</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
