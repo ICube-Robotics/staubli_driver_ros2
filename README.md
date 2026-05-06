@@ -76,5 +76,9 @@ ros2 launch staubli_bringup launch_robot_control.launch.py \
 
 [ICube Laboratory](https://icube.unistra.fr), [University of Strasbourg](https://www.unistra.fr/), France
 
+<img src="staubli_driver_ros2/sphinx/images/logo-conectus-couleur.png" alt="drawing" width="200"/>
+
+[SATT Conectus](https://www.conectus.fr/), France
+
 __Thibault Poignonec:__ [tpoignonec@unistra.fr](mailto:tpoignonec@unistra.fr) / [thibault.poignonec@gmail.com](mailto:thibault.poignonec@gmail.com)
 __Laurent Barbé:__ [laurent.barbe@unistra.fr](mailto:laurent.barbe@unistra.fr)
