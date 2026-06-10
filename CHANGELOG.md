@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.1.4] - 2026/06/08
+
+### Changed
+- Permission `wait_for_robot_ready.py`
+
 ## [0.1.3] - 2026/05/06
 
 ### Changed
